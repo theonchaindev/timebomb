@@ -465,7 +465,7 @@
     <!-- DEV WALLET -->
     <div class="dev-panel">
       <div class="dev-left">
-        <div class="dev-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 3.5 2 6 5 7v3h6v-3c3-1 5-3.5 5-7a8 8 0 0 0-8-8z"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>Dev Wallet</div>
+        <div class="dev-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="13" r="6"/><path d="M14.5 4.5a2.5 2.5 0 0 1 3.5 3.5"/><path d="M13 3l-2 3.5"/><line x1="17" y1="5" x2="19" y2="3"/></svg>Dev Wallet</div>
         <div class="dev-addr">6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm</div>
       </div>
       <div class="dev-status-badge holding" id="dev-status-badge">HOLDING</div>
@@ -822,13 +822,13 @@
     }
 
     function triggerDevSell(solAmount) {
-      devBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.7rem;height:.7rem;vertical-align:middle;margin-right:.25rem"><path d="M12 2a8 8 0 0 0-8 8c0 3.5 2 6 5 7v3h6v-3c3-1 5-3.5 5-7a8 8 0 0 0-8-8z"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>SELLING';
+      devBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.7rem;height:.7rem;vertical-align:middle;margin-right:.25rem"><circle cx="11" cy="13" r="6"/><path d="M14.5 4.5a2.5 2.5 0 0 1 3.5 3.5"/><path d="M13 3l-2 3.5"/><line x1="17" y1="5" x2="19" y2="3"/></svg>SELLING';
       devBadge.classList.remove('holding');
       devAlertBanner.classList.add('show');
       const item = document.createElement('div');
       item.className = 'feed-item dev-sell';
       item.innerHTML = `
-        <div class="feed-left"><span class="feed-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.7rem;height:.7rem;vertical-align:middle;margin-right:.25rem"><path d="M12 2a8 8 0 0 0-8 8c0 3.5 2 6 5 7v3h6v-3c3-1 5-3.5 5-7a8 8 0 0 0-8-8z"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
+        <div class="feed-left"><span class="feed-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.7rem;height:.7rem;vertical-align:middle;margin-right:.25rem"><circle cx="11" cy="13" r="6"/><path d="M14.5 4.5a2.5 2.5 0 0 1 3.5 3.5"/><path d="M13 3l-2 3.5"/><line x1="17" y1="5" x2="19" y2="3"/></svg>DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
         <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta" style="color:#fff">BOOM</span></div>`;
       feedList.insertBefore(item, feedList.firstChild);
       for (let i = 0; i < 8; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.7)', 0.7); }, i * 150);
