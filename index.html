@@ -263,7 +263,12 @@
       padding: 1rem; border-right: 2px solid var(--border); border-bottom: 2px solid var(--border);
       background: var(--card); display: flex; align-items: flex-start; gap: 0.7rem;
     }
-    .rule-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .rule-icon { flex-shrink: 0; display: flex; align-items: center; }
+    .rule-icon svg { width: 1.2rem; height: 1.2rem; }
+    .dev-tag svg { width: 0.75rem; height: 0.75rem; vertical-align: middle; margin-right: 0.3rem; }
+    .dev-status-badge svg { width: 0.7rem; height: 0.7rem; vertical-align: middle; margin-right: 0.25rem; }
+    .feed-type svg { width: 0.7rem; height: 0.7rem; vertical-align: middle; margin-right: 0.25rem; }
+    #dev-alert svg { width: 0.9rem; height: 0.9rem; vertical-align: middle; margin: 0 0.3rem; }
     .rule-title {
       font-family: 'Orbitron', monospace; font-size: clamp(0.58rem, 1.9vw, 0.68rem);
       font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.25rem;
@@ -397,7 +402,7 @@
   <div id="flash"></div>
   <div id="audio-hint">🔇 Tap to enable audio</div>
 
-  <div id="dev-alert">⚠️ DEV WALLET IS SELLING — BOMB DETONATING ⚠️</div>
+  <div id="dev-alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> DEV WALLET IS SELLING — BOMB DETONATING <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
 
   <div id="detonation">
     <img src="/boom-tp.png" alt="BOOM" class="det-logo" />
@@ -460,7 +465,7 @@
     <!-- DEV WALLET -->
     <div class="dev-panel">
       <div class="dev-left">
-        <div class="dev-tag">💀 Dev Wallet</div>
+        <div class="dev-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 3.5 2 6 5 7v3h6v-3c3-1 5-3.5 5-7a8 8 0 0 0-8-8z"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>Dev Wallet</div>
         <div class="dev-addr">6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm</div>
       </div>
       <div class="dev-status-badge holding" id="dev-status-badge">HOLDING</div>
@@ -469,14 +474,14 @@
     <!-- RULES -->
     <div class="rules-wrap">
       <div class="rule-card buy">
-        <div class="rule-icon">📈</div>
+        <div class="rule-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
         <div>
           <div class="rule-title">Buy &gt; 0.1 SOL</div>
           <div class="rule-desc">Adds <strong>+1 second</strong> to the timer.</div>
         </div>
       </div>
       <div class="rule-card sell">
-        <div class="rule-icon">📉</div>
+        <div class="rule-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
         <div>
           <div class="rule-title">Sell &gt; 0.1 SOL</div>
           <div class="rule-desc">Removes <strong>−1 second</strong>. Traitors die first.</div>
@@ -817,13 +822,13 @@
     }
 
     function triggerDevSell(solAmount) {
-      devBadge.textContent = 'SELLING 💀';
+      devBadge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.7rem;height:.7rem;vertical-align:middle;margin-right:.25rem"><path d="M12 2a8 8 0 0 0-8 8c0 3.5 2 6 5 7v3h6v-3c3-1 5-3.5 5-7a8 8 0 0 0-8-8z"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>SELLING';
       devBadge.classList.remove('holding');
       devAlertBanner.classList.add('show');
       const item = document.createElement('div');
       item.className = 'feed-item dev-sell';
       item.innerHTML = `
-        <div class="feed-left"><span class="feed-type">💀 DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
+        <div class="feed-left"><span class="feed-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:.7rem;height:.7rem;vertical-align:middle;margin-right:.25rem"><path d="M12 2a8 8 0 0 0-8 8c0 3.5 2 6 5 7v3h6v-3c3-1 5-3.5 5-7a8 8 0 0 0-8-8z"/><line x1="9" y1="17" x2="9" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/><line x1="15" y1="17" x2="15" y2="20"/></svg>DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
         <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta" style="color:#fff">BOOM</span></div>`;
       feedList.insertBefore(item, feedList.firstChild);
       for (let i = 0; i < 8; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.7)', 0.7); }, i * 150);
