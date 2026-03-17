@@ -1,6 +1,6 @@
 const { readGist, writeGist } = require('./state')
 
-const TOKEN      = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump'
+const TOKEN      = '6c8Hi9DYc4zznGyN5hMYwuq6QpFC74SpChxJisXWpump'
 const DEV_WALLET = 'Gp2e7TqSav3ZzXZNkfJ3c4psZZzH2jsES72P6vBMNhdf'
 const RPC_URL    = 'https://api.mainnet-beta.solana.com'
 
