@@ -780,7 +780,6 @@
 
   <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump &nbsp;·&nbsp; Dev wallet sells at 0 &nbsp;·&nbsp; Built on Solana</div>
 
-  <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
   <script>
     // ── CONSTANTS ────────────────────────────────────
     const TOKEN = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
@@ -977,25 +976,16 @@
     // ── FETCH INITIAL STATE ──────────────────────────
     function setStatus(text, color) { headerStatus.textContent = text; headerStatus.style.color = color || ''; }
 
-    fetch('/api/state')
-      .then(r => r.json())
-      .then(syncState)
-      .catch(() => {});
-
-    // ── ABLY REALTIME SYNC ───────────────────────────
-    // All clients receive the same Ably broadcast → timer stays globally in sync
-    const ablyClient = new Ably.Realtime({ authUrl: '/api/ably-token' });
-    ablyClient.connection.on('connected', () => setStatus('LIVE ON SOLANA', ''));
-    ablyClient.connection.on('connecting', () => setStatus('CONNECTING…', 'rgba(255,204,0,0.8)'));
-    ablyClient.connection.on('disconnected', () => setStatus('RECONNECTING…', 'rgba(255,204,0,0.8)'));
-
-    const ablyChannel = ablyClient.channels.get('timebomb');
-    ablyChannel.subscribe('update', (msg) => {
-      const data = typeof msg.data === 'string' ? JSON.parse(msg.data) : msg.data;
-      syncState(data);
-      if (data.txType === 'buy') showBuyEffect(Number(data.solAmount), data.traderAddr);
-      else if (data.txType === 'sell') showSellEffect(Number(data.solAmount), data.traderAddr);
-    });
+    // ── POLL SERVER STATE ────────────────────────────
+    // Fetches authoritative detonatesAt + stats every 2s — keeps all clients in sync
+    function pollState() {
+      fetch('/api/get-state')
+        .then(r => r.json())
+        .then(syncState)
+        .catch(() => {})
+        .finally(() => { if (running) setTimeout(pollState, 2000); });
+    }
+    pollState();
 
     // ── PUMP.FUN WEBSOCKET ───────────────────────────
     // Each client connects but only REPORTS trades to /api/trade (server dedupes by sig)
