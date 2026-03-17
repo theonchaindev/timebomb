@@ -1017,14 +1017,15 @@
         }
         if (isDevWallet) return;
         if (data.mint && data.mint !== TOKEN) return;
+        if (solAmount < 0.1) return;
 
         // Show visual effects + optimistic timer update immediately
         if (data.txType === 'buy') {
           showBuyEffect(solAmount, data.traderPublicKey);
-          if (solAmount >= 0.1) detonatesAt += 1000;
+          detonatesAt += 1000;
         } else if (data.txType === 'sell') {
           showSellEffect(solAmount, data.traderPublicKey);
-          if (solAmount >= 0.1) detonatesAt = Math.max(detonatesAt - 1000, Date.now() + 500);
+          detonatesAt = Math.max(detonatesAt - 1000, Date.now() + 500);
         }
 
         // Report to API — server dedupes and keeps all clients in sync via polling
