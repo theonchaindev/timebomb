@@ -14,6 +14,9 @@ module.exports = async (req, res) => {
   try {
     const state = await readGist()
 
+    // Don't process trades while timer is paused
+    if (state.paused) return res.json({ paused: true })
+
     // Dedup by signature — stored in processed array (last 200 sigs)
     const processed = state.processed || []
     if (processed.includes(signature)) return res.json({ duplicate: true })
