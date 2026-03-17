@@ -5,635 +5,473 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>BOOM — Tick or Die</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #030303;
-      --accent: #ff2d2d;
-      --accent-glow: rgba(255,45,45,0.6);
-      --green: #00ff88;
-      --green-glow: rgba(0,255,136,0.5);
+      --red:    #ff1a1a;
+      --green:  #00ff88;
       --yellow: #ffcc00;
-      --yellow-glow: rgba(255,204,0,0.5);
-      --text: #ffffff;
-      --muted: rgba(255,255,255,0.4);
-      --timer-color: #ff2d2d;
-      --timer-glow: rgba(255,45,45,0.8);
+      --bg:     #0a0a0a;
+      --card:   #111111;
+      --border: #222222;
+      --muted:  rgba(255,255,255,0.35);
+      --accent: #ff1a1a;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Space Mono', monospace;
       background: var(--bg);
-      color: var(--text);
+      color: #fff;
       min-height: 100vh;
       min-height: 100dvh;
       overflow-x: hidden;
-      transition: background 0.5s ease;
     }
 
-    /* ── CANVAS BACKGROUND ─────────────────────────── */
-    #bg-canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ── FLASH OVERLAY ─────────────────────────────── */
+    /* ── FLASH ─────────────────────────────────────── */
     #flash {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999;
-      opacity: 0;
-      transition: opacity 0.05s;
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 999;
+      opacity: 0; transition: opacity 0.05s;
     }
 
-    /* ── SCANLINES ─────────────────────────────────── */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,0,0,0.06) 2px,
-        rgba(0,0,0,0.06) 4px
-      );
-      pointer-events: none;
-      z-index: 1000;
-    }
+    /* ── CANVAS ────────────────────────────────────── */
+    #bg-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
-    /* ── MAIN LAYOUT ───────────────────────────────── */
+    /* ── LAYOUT ────────────────────────────────────── */
     main {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      min-height: 100dvh;
-      padding: 0 1rem 5rem;
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0 1.25rem 6rem;
     }
 
     /* ── HEADER ────────────────────────────────────── */
     header {
-      width: 100%;
-      max-width: 700px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      margin-bottom: 2rem;
+      width: 100%; max-width: 680px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 2.5rem;
     }
 
     .logo-img {
-      height: 44px;
-      width: auto;
-      filter: drop-shadow(0 0 12px rgba(255,45,45,0.7));
-      transition: filter 0.5s;
+      height: 40px; width: auto;
+      /* no glow, no filter */
     }
 
-    body.state-green .logo-img  { filter: drop-shadow(0 0 12px rgba(0,255,136,0.7)) hue-rotate(120deg); }
-    body.state-yellow .logo-img { filter: drop-shadow(0 0 12px rgba(255,204,0,0.7)) hue-rotate(20deg) saturate(1.5); }
+    .live-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,26,26,0.12);
+      border: 1px solid rgba(255,26,26,0.35);
+      border-radius: 2px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--red);
+    }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-family: 'Space Mono', monospace;
-      letter-spacing: 0.08em;
+    body.state-green .live-pill {
+      background: rgba(0,255,136,0.1);
+      border-color: rgba(0,255,136,0.3);
+      color: var(--green);
     }
 
     .live-dot {
-      width: 7px;
-      height: 7px;
-      background: var(--timer-color);
+      width: 6px; height: 6px;
+      background: currentColor;
       border-radius: 50%;
-      box-shadow: 0 0 8px var(--timer-glow);
       animation: pulse-dot 1s ease-in-out infinite;
-      transition: background 0.5s, box-shadow 0.5s;
-      flex-shrink: 0;
     }
-
     @keyframes pulse-dot {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.5); opacity: 0.5; }
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(1.4); }
     }
 
-    /* ── LOGO / TITLE AREA ─────────────────────────── */
+    /* ── TITLE LOGO ────────────────────────────────── */
     .title-wrap {
       text-align: center;
-      margin-bottom: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
+      margin-bottom: 2.5rem;
     }
 
     .title-logo {
-      width: min(280px, 65vw);
+      width: min(260px, 60vw);
       height: auto;
-      filter: drop-shadow(0 0 30px rgba(255,45,45,0.6)) drop-shadow(0 0 60px rgba(255,45,45,0.3));
-      animation: bob 3s ease-in-out infinite;
-      transition: filter 0.5s;
-    }
-
-    body.state-green  .title-logo { filter: drop-shadow(0 0 30px rgba(0,255,136,0.5)) drop-shadow(0 0 60px rgba(0,255,136,0.25)) hue-rotate(120deg); }
-    body.state-yellow .title-logo { filter: drop-shadow(0 0 30px rgba(255,204,0,0.5)) drop-shadow(0 0 60px rgba(255,204,0,0.25)) hue-rotate(20deg) saturate(1.5); }
-
-    @keyframes bob {
-      0%, 100% { transform: translateY(0) rotate(-2deg); }
-      50%       { transform: translateY(-8px) rotate(2deg); }
+      display: block;
+      margin: 0 auto 1rem;
+      /* no glow */
     }
 
     .subtitle {
-      font-size: clamp(0.65rem, 2.5vw, 0.85rem);
-      letter-spacing: 0.25em;
+      font-size: clamp(0.6rem, 2.5vw, 0.75rem);
+      letter-spacing: 0.3em;
       text-transform: uppercase;
       color: var(--muted);
-      font-family: 'Space Mono', monospace;
     }
 
-    /* ── TIMER DISPLAY ─────────────────────────────── */
+    /* ── TIMER ─────────────────────────────────────── */
     .timer-container {
-      position: relative;
-      margin-bottom: 2rem;
-      width: 100%;
-      max-width: 500px;
+      width: 100%; max-width: 680px;
+      margin-bottom: 0;
     }
 
-    .timer-outer {
-      position: relative;
-      padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1.5rem, 6vw, 4rem);
-      border: 2px solid var(--timer-color);
-      border-radius: 4px;
-      background: rgba(0,0,0,0.7);
-      box-shadow:
-        0 0 0 1px rgba(255,45,45,0.1),
-        0 0 40px var(--timer-glow),
-        0 0 80px rgba(255,45,45,0.12),
-        inset 0 0 40px rgba(0,0,0,0.8);
-      transition: border-color 0.5s, box-shadow 0.5s;
+    .timer-block {
+      background: var(--accent);
+      padding: clamp(1.5rem, 5vw, 3rem) clamp(1rem, 5vw, 3rem);
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    .timer-corner {
-      position: absolute;
-      width: 12px;
-      height: 12px;
-      border-color: var(--timer-color);
-      border-style: solid;
-      transition: border-color 0.5s;
+    .timer-block::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent, transparent 8px,
+        rgba(0,0,0,0.08) 8px, rgba(0,0,0,0.08) 16px
+      );
+      pointer-events: none;
     }
-    .timer-corner.tl { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
-    .timer-corner.tr { top: -2px; right: -2px; border-width: 2px 2px 0 0; }
-    .timer-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 2px 2px; }
-    .timer-corner.br { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
 
-    .timer-label {
-      position: absolute;
-      top: -0.6rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--bg);
-      padding: 0 0.75rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      color: var(--timer-color);
+    body.state-green  .timer-block { background: var(--green); }
+    body.state-yellow .timer-block { background: var(--yellow); }
+
+    .timer-label-top {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
       text-transform: uppercase;
-      transition: color 0.5s;
-      white-space: nowrap;
+      color: rgba(0,0,0,0.55);
+      margin-bottom: 0.5rem;
+      position: relative;
     }
 
     #timer {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(4.5rem, 22vw, 10rem);
+      font-size: clamp(6rem, 28vw, 14rem);
       font-weight: 900;
-      letter-spacing: 0.04em;
-      color: var(--timer-color);
-      text-shadow:
-        0 0 20px var(--timer-glow),
-        0 0 60px var(--timer-glow),
-        0 0 100px rgba(255,45,45,0.4);
       line-height: 1;
-      transition: color 0.3s, text-shadow 0.3s;
+      color: #000;
       display: block;
-      min-width: 3ch;
       text-align: center;
+      position: relative;
+      letter-spacing: -0.02em;
+    }
+
+    body.state-red #timer {
+      animation: critical-pulse 0.4s ease-in-out infinite;
+    }
+    @keyframes critical-pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.55; }
     }
 
     .timer-sub {
-      text-align: center;
-      margin-top: 0.6rem;
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(0.55rem, 2vw, 0.7rem);
-      letter-spacing: 0.2em;
-      color: rgba(255,255,255,0.2);
+      font-size: clamp(0.55rem, 2vw, 0.65rem);
+      letter-spacing: 0.25em;
       text-transform: uppercase;
+      color: rgba(0,0,0,0.45);
+      margin-top: 0.5rem;
+      position: relative;
     }
 
-    /* ── PROGRESS BAR ──────────────────────────────── */
-    .progress-wrap {
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 2rem;
-    }
-
-    .progress-labels {
-      display: flex;
-      justify-content: space-between;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      margin-bottom: 0.5rem;
-    }
-
+    /* ── PROGRESS ──────────────────────────────────── */
     .progress-track {
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.06);
-      border-radius: 3px;
-      overflow: hidden;
+      width: 100%; max-width: 680px;
+      height: 8px;
+      background: var(--border);
     }
 
     #progress-fill {
       height: 100%;
-      background: var(--timer-color);
-      border-radius: 3px;
-      box-shadow: 0 0 12px var(--timer-glow);
-      transition: width 0.5s ease, background 0.5s, box-shadow 0.5s;
+      background: var(--accent);
+      transition: width 0.5s ease, background 0.5s;
     }
 
-    /* ── STATS ROW ─────────────────────────────────── */
+    body.state-green  #progress-fill { background: var(--green); }
+    body.state-yellow #progress-fill { background: var(--yellow); }
+
+    /* ── STATS ─────────────────────────────────────── */
     .stats-row {
+      width: 100%; max-width: 680px;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 2rem;
+      border-left: 2px solid var(--border);
+      margin-bottom: 0;
     }
 
     .stat-card {
-      padding: 0.9rem 0.5rem;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 4px;
-      background: rgba(255,255,255,0.02);
+      padding: 1.1rem 0.75rem;
+      border-right: 2px solid var(--border);
+      border-bottom: 2px solid var(--border);
       text-align: center;
-      transition: border-color 0.5s, background 0.5s;
+      background: var(--card);
     }
 
     .stat-value {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(1rem, 4vw, 1.4rem);
-      font-weight: 700;
-      color: var(--timer-color);
-      text-shadow: 0 0 12px var(--timer-glow);
-      transition: color 0.5s, text-shadow 0.5s;
+      font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+      font-weight: 900;
+      color: var(--accent);
+      transition: color 0.4s;
+      line-height: 1;
     }
 
+    body.state-green  .stat-value { color: var(--green); }
+    body.state-yellow .stat-value { color: var(--yellow); }
+
     .stat-label {
-      font-size: clamp(0.55rem, 2vw, 0.65rem);
-      letter-spacing: 0.1em;
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-top: 0.25rem;
-      font-family: 'Space Mono', monospace;
+      margin-top: 0.35rem;
+    }
+
+    /* ── DEV PANEL ─────────────────────────────────── */
+    .dev-panel {
+      width: 100%; max-width: 680px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+      padding: 0.9rem 1rem;
+      background: var(--card);
+      border-left: 2px solid var(--border);
+      border-right: 2px solid var(--border);
+      border-bottom: 2px solid var(--border);
+    }
+
+    .dev-left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+
+    .dev-tag {
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .dev-addr {
+      font-size: clamp(0.52rem, 1.8vw, 0.65rem);
+      color: rgba(255,255,255,0.35);
+      word-break: break-all;
+    }
+
+    .dev-status-badge {
+      font-size: 0.62rem;
+      padding: 0.3rem 0.8rem;
+      border: 2px solid var(--red);
+      color: var(--red);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: transparent;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .dev-status-badge.holding {
+      border-color: var(--green);
+      color: var(--green);
     }
 
     /* ── RULES ─────────────────────────────────────── */
     .rules-wrap {
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 2rem;
+      width: 100%; max-width: 680px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
+      border-left: 2px solid var(--border);
+      margin-bottom: 0;
     }
 
     .rule-card {
-      padding: 1rem 1.1rem;
-      border-radius: 4px;
-      border: 1px solid;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.65rem;
+      padding: 1.1rem 1rem;
+      border-right: 2px solid var(--border);
+      border-bottom: 2px solid var(--border);
+      background: var(--card);
+      display: flex; align-items: flex-start; gap: 0.75rem;
     }
 
-    .rule-card.buy  { border-color: rgba(0,255,136,0.2); background: rgba(0,255,136,0.04); }
-    .rule-card.sell { border-color: rgba(255,45,45,0.2);  background: rgba(255,45,45,0.04); }
-
-    .rule-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .rule-icon { font-size: 1.2rem; flex-shrink: 0; }
 
     .rule-title {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(0.6rem, 2.2vw, 0.72rem);
-      font-weight: 700;
+      font-size: clamp(0.6rem, 2vw, 0.7rem);
+      font-weight: 900;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       margin-bottom: 0.3rem;
     }
 
     .rule-card.buy  .rule-title { color: var(--green); }
-    .rule-card.sell .rule-title { color: var(--accent); }
+    .rule-card.sell .rule-title { color: var(--red); }
 
     .rule-desc {
-      font-size: clamp(0.68rem, 2.5vw, 0.78rem);
+      font-size: clamp(0.62rem, 2.2vw, 0.72rem);
       color: var(--muted);
-      line-height: 1.45;
+      line-height: 1.5;
     }
 
-    /* ── DEV WALLET PANEL ──────────────────────────── */
-    .dev-panel {
-      width: 100%;
-      max-width: 500px;
-      margin-bottom: 2rem;
-      padding: 0.9rem 1.2rem;
-      border: 1px solid rgba(255,45,45,0.2);
-      border-radius: 4px;
-      background: rgba(255,45,45,0.04);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .dev-left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-
-    .dev-tag {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .dev-addr {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(0.55rem, 2vw, 0.68rem);
-      color: rgba(255,255,255,0.45);
-      word-break: break-all;
-    }
-
-    .dev-status-badge {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.62rem;
-      padding: 0.3rem 0.7rem;
-      border-radius: 3px;
-      border: 1px solid rgba(255,45,45,0.3);
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      background: rgba(255,45,45,0.08);
-      transition: all 0.3s;
-      flex-shrink: 0;
-    }
-
-    .dev-status-badge.holding {
-      border-color: rgba(0,255,136,0.3);
-      color: var(--green);
-      background: rgba(0,255,136,0.08);
-    }
-
-    /* ── LIVE FEED ─────────────────────────────────── */
+    /* ── FEED ──────────────────────────────────────── */
     .feed-wrap {
-      width: 100%;
-      max-width: 500px;
+      width: 100%; max-width: 680px;
+      border-left: 2px solid var(--border);
+      border-right: 2px solid var(--border);
+      border-bottom: 2px solid var(--border);
     }
 
     .feed-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 2px solid var(--border);
+      font-size: 0.62rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--muted);
+      background: var(--card);
     }
 
     #feed-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      max-height: 260px;
-      overflow: hidden;
-      position: relative;
+      display: flex; flex-direction: column;
+      max-height: 240px; overflow: hidden; position: relative;
     }
 
     #feed-list::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 70px;
+      content: ''; position: absolute;
+      bottom: 0; left: 0; right: 0; height: 60px;
       background: linear-gradient(transparent, var(--bg));
       pointer-events: none;
     }
 
     .feed-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.55rem 0.9rem;
-      border-radius: 3px;
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(0.6rem, 2.5vw, 0.72rem);
-      animation: slide-in 0.3s ease forwards;
-      border: 1px solid transparent;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.55rem 1rem;
+      font-size: clamp(0.6rem, 2.2vw, 0.68rem);
+      border-bottom: 1px solid var(--border);
+      animation: slide-in 0.25s ease forwards;
     }
 
     @keyframes slide-in {
-      from { opacity: 0; transform: translateY(-6px); }
+      from { opacity: 0; transform: translateY(-5px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .feed-item.buy  { background: rgba(0,255,136,0.06); border-color: rgba(0,255,136,0.12); color: var(--green); }
-    .feed-item.sell { background: rgba(255,45,45,0.06);  border-color: rgba(255,45,45,0.12);  color: var(--accent); }
+    .feed-item.buy  { background: rgba(0,255,136,0.06); }
+    .feed-item.sell { background: rgba(255,26,26,0.06); }
 
-    .feed-left  { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+    .feed-left  { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
     .feed-type  { font-weight: 700; letter-spacing: 0.05em; white-space: nowrap; }
-    .feed-addr  { color: rgba(255,255,255,0.3); font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-item.buy  .feed-type { color: var(--green); }
+    .feed-item.sell .feed-type { color: var(--red); }
+    .feed-addr  { color: rgba(255,255,255,0.25); font-size: 0.58rem; }
     .feed-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; margin-left: 0.5rem; }
-    .feed-amount { font-weight: 700; white-space: nowrap; }
-    .feed-delta  { font-size: 0.6rem; opacity: 0.7; white-space: nowrap; }
+    .feed-amount { font-weight: 700; color: #fff; white-space: nowrap; font-size: 0.68rem; }
+    .feed-delta  { font-size: 0.6rem; white-space: nowrap; }
+    .feed-item.buy  .feed-delta { color: var(--green); }
+    .feed-item.sell .feed-delta { color: var(--red); }
 
-    /* ── DEV SELL FEED ITEM ─────────────────────────── */
-    .feed-item.dev-sell {
-      background: rgba(255,0,0,0.15);
-      border-color: rgba(255,0,0,0.5);
-      color: #ff4444;
-      box-shadow: 0 0 12px rgba(255,0,0,0.3);
-    }
+    .feed-item.dev-sell { background: rgba(255,0,0,0.15); border-color: rgba(255,0,0,0.3); }
     .feed-item.dev-sell .feed-type { color: #fff; }
 
     /* ── DEV SELL ALERT ─────────────────────────────── */
     #dev-alert {
       display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 500;
-      background: rgba(255,0,0,0.95);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      background: var(--red);
       padding: 0.75rem 1rem;
       text-align: center;
       font-family: 'Orbitron', monospace;
-      font-size: clamp(0.65rem, 3vw, 0.9rem);
-      font-weight: 900;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
+      font-size: clamp(0.65rem, 3vw, 0.85rem);
+      font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;
       color: #fff;
       animation: flash-bar 0.3s ease infinite alternate;
     }
-    @keyframes flash-bar { from { opacity: 1; } to { opacity: 0.6; } }
+    @keyframes flash-bar { from { opacity: 1; } to { opacity: 0.65; } }
     #dev-alert.show { display: block; }
 
     /* ── DETONATION SCREEN ─────────────────────────── */
     #detonation {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
+      display: none; position: fixed; inset: 0; z-index: 9999;
       background: #000;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 2rem;
     }
     #detonation.active { display: flex; }
 
     .det-logo {
-      width: min(240px, 60vw);
-      height: auto;
+      width: min(220px, 55vw); height: auto;
       animation: explode 0.5s ease forwards;
-      filter: drop-shadow(0 0 40px rgba(255,45,45,0.8));
+      margin-bottom: 1.5rem;
     }
-
     @keyframes explode {
-      0%   { transform: scale(0.5); opacity: 0; }
-      60%  { transform: scale(1.2); }
-      100% { transform: scale(1);   opacity: 1; }
+      0%  { transform: scale(0.4); opacity: 0; }
+      65% { transform: scale(1.15); }
+      100%{ transform: scale(1);   opacity: 1; }
     }
 
     .det-title {
       font-family: 'Orbitron', monospace;
       font-size: clamp(2.5rem, 10vw, 5rem);
       font-weight: 900;
-      color: var(--accent);
-      text-shadow: 0 0 60px var(--accent-glow);
-      margin: 1rem 0 0.5rem;
+      color: var(--red);
+      margin-bottom: 0.75rem;
       animation: glitch-text 0.1s infinite alternate;
     }
-
     @keyframes glitch-text {
       0%   { clip-path: inset(0 0 0 0); transform: translate(0); }
-      20%  { clip-path: inset(20% 0 30% 0); transform: translate(-3px, 2px); }
-      40%  { clip-path: inset(50% 0 10% 0); transform: translate(3px, -2px); }
-      60%  { clip-path: inset(10% 0 50% 0); transform: translate(-2px, 3px); }
-      80%  { clip-path: inset(30% 0 20% 0); transform: translate(2px, -3px); }
+      25%  { clip-path: inset(25% 0 35% 0); transform: translate(-3px, 2px); }
+      50%  { clip-path: inset(55% 0 10% 0); transform: translate(3px, -2px); }
+      75%  { clip-path: inset(10% 0 55% 0); transform: translate(-2px, 3px); }
       100% { clip-path: inset(0 0 0 0); transform: translate(0); }
     }
 
     .det-sub {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(0.65rem, 3vw, 0.9rem);
-      color: var(--muted);
-      letter-spacing: 0.15em;
-      margin-bottom: 1.5rem;
+      font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+      color: var(--muted); letter-spacing: 0.2em;
+      text-transform: uppercase; margin-bottom: 2rem;
     }
 
     .det-wallet {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(0.5rem, 2vw, 0.65rem);
-      color: rgba(255,255,255,0.25);
-      letter-spacing: 0.08em;
+      font-size: clamp(0.5rem, 1.8vw, 0.62rem);
+      color: rgba(255,255,255,0.2);
     }
-
-    .det-wallet a {
-      color: rgba(255,255,255,0.35);
-      text-decoration: none;
-      word-break: break-all;
-    }
-
-    /* ── COLOR STATES ──────────────────────────────── */
-    body.state-green  { --timer-color: var(--green);  --timer-glow: var(--green-glow); }
-    body.state-yellow { --timer-color: var(--yellow); --timer-glow: var(--yellow-glow); }
-    body.state-red    { --timer-color: var(--accent); --timer-glow: var(--accent-glow); }
+    .det-wallet a { color: rgba(255,255,255,0.3); text-decoration: none; word-break: break-all; }
 
     /* ── SHAKE ─────────────────────────────────────── */
     @keyframes shake {
-      0%,100% { transform: translate(0,0) rotate(0); }
-      10% { transform: translate(-4px, 2px) rotate(-0.5deg); }
-      20% { transform: translate(4px, -2px) rotate(0.5deg); }
-      30% { transform: translate(-6px, 3px) rotate(-1deg); }
-      40% { transform: translate(6px, -3px) rotate(1deg); }
-      50% { transform: translate(-3px, 4px) rotate(-0.5deg); }
-      60% { transform: translate(3px, -4px) rotate(0.5deg); }
-      70% { transform: translate(-5px, 2px) rotate(-0.5deg); }
-      80% { transform: translate(5px, -2px) rotate(0.5deg); }
-      90% { transform: translate(-2px, 3px) rotate(0); }
+      0%,100% { transform: translate(0,0); }
+      15% { transform: translate(-5px, 3px); }
+      30% { transform: translate(5px, -3px); }
+      45% { transform: translate(-7px, 4px); }
+      60% { transform: translate(7px, -4px); }
+      75% { transform: translate(-4px, 2px); }
+      90% { transform: translate(4px, -2px); }
     }
-    body.shaking main { animation: shake 0.4s ease; }
-
-    /* ── CRITICAL PULSE ────────────────────────────── */
-    @keyframes critical-pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.4; }
-    }
-    body.state-red #timer { animation: critical-pulse 0.5s ease-in-out infinite; }
+    body.shaking main { animation: shake 0.35s ease; }
 
     /* ── FOOTER ────────────────────────────────────── */
     .footer-text {
       position: fixed;
-      bottom: env(safe-area-inset-bottom, 1rem);
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.55rem;
-      color: rgba(255,255,255,0.1);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      z-index: 1;
-      text-align: center;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 0.85rem);
+      left: 50%; transform: translateX(-50%);
+      font-size: 0.5rem; color: rgba(255,255,255,0.1);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      white-space: nowrap; z-index: 1;
     }
 
     /* ── MOBILE ────────────────────────────────────── */
     @media (max-width: 480px) {
-      main { padding: 0 0.85rem 5rem; }
-
-      header { padding: 0.85rem 0; margin-bottom: 1.5rem; }
-      .logo-img { height: 36px; }
-      .header-right span { display: none; }
-
-      .title-logo { width: min(220px, 72vw); }
-
+      header { margin-bottom: 1.75rem; }
+      .logo-img { height: 34px; }
+      .title-logo { width: min(200px, 68vw); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
-
       .rules-wrap { grid-template-columns: 1fr; }
-
-      .dev-addr { font-size: 0.52rem; }
-
-      .footer-text { font-size: 0.48rem; letter-spacing: 0.06em; }
+      .footer-text { display: none; }
     }
 
     @media (max-width: 360px) {
-      .title-logo { width: 180px; }
-      .logo-img { height: 30px; }
+      .logo-img { height: 28px; }
+      .title-logo { width: 170px; }
     }
   </style>
 </head>
@@ -642,16 +480,14 @@
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
 
-  <!-- DEV SELL ALERT BANNER -->
   <div id="dev-alert">⚠️ DEV WALLET IS SELLING — BOMB DETONATING ⚠️</div>
 
-  <!-- DETONATION SCREEN -->
   <div id="detonation">
     <img src="/boom-tp.png" alt="BOOM" class="det-logo" />
     <div class="det-title">DETONATED</div>
-    <div class="det-sub">DEV WALLET DUMPED — YOU FAILED TO SURVIVE</div>
+    <div class="det-sub">Dev wallet dumped — you failed to survive</div>
     <div class="det-wallet">
-      <div style="color:rgba(255,45,45,0.5); letter-spacing:0.15em; font-size:0.6rem; margin-bottom:0.4rem;">DEV WALLET</div>
+      <div style="margin-bottom:0.4rem; color:rgba(255,26,26,0.5); letter-spacing:0.2em; font-size:0.55rem;">DEV WALLET</div>
       <a href="https://solscan.io/account/6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm" target="_blank">
         6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm
       </a>
@@ -661,37 +497,23 @@
   <main>
     <header>
       <img src="/boom-tp.png" alt="BOOM" class="logo-img" />
-      <div class="header-right">
+      <div class="live-pill">
         <div class="live-dot"></div>
         <span id="header-status">LIVE ON SOLANA</span>
       </div>
     </header>
 
-    <!-- LOGO + SUBTITLE -->
     <div class="title-wrap">
       <img src="/boom-tp.png" alt="BOOM" class="title-logo" />
       <div class="subtitle">Buy to survive · Sell to detonate</div>
     </div>
 
-    <!-- TIMER -->
+    <!-- TIMER BLOCK -->
     <div class="timer-container">
-      <div class="timer-outer">
-        <div class="timer-corner tl"></div>
-        <div class="timer-corner tr"></div>
-        <div class="timer-corner bl"></div>
-        <div class="timer-corner br"></div>
-        <div class="timer-label">TIME REMAINING</div>
+      <div class="timer-block">
+        <div class="timer-label-top">Time Remaining</div>
         <span id="timer">600</span>
-        <div class="timer-sub">SECONDS UNTIL DETONATION</div>
-      </div>
-    </div>
-
-    <!-- PROGRESS BAR -->
-    <div class="progress-wrap">
-      <div class="progress-labels">
-        <span>DETONATION</span>
-        <span id="pct-label">100%</span>
-        <span>SAFE ZONE</span>
+        <div class="timer-sub">Seconds Until Detonation</div>
       </div>
       <div class="progress-track">
         <div id="progress-fill" style="width:100%"></div>
@@ -733,7 +555,7 @@
         <div class="rule-icon">📈</div>
         <div>
           <div class="rule-title">Buy &gt; 0.1 SOL</div>
-          <div class="rule-desc">Adds <strong>+1 second</strong> to the timer. Keep the bomb alive.</div>
+          <div class="rule-desc">Adds <strong>+1 second</strong> to the timer.</div>
         </div>
       </div>
       <div class="rule-card sell">
@@ -755,22 +577,19 @@
     </div>
   </main>
 
-  <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump &nbsp;·&nbsp; Built on Solana</div>
+  <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump · Built on Solana</div>
 
   <script>
-    // ── CONSTANTS ────────────────────────────────────
     const TOKEN      = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
     const DEV_WALLET = '6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm';
     const WS_URL     = 'wss://pumpportal.fun/api/data';
     const BASE_TIME  = 600;
 
-    // ── STATE ─────────────────────────────────────────
-    let detonatesAt  = Date.now() + BASE_TIME * 1000;
-    let running      = true;
+    let detonatesAt      = Date.now() + BASE_TIME * 1000;
+    let running          = true;
     let consecutiveSells = 0;
-    let serverSynced = false;
+    let serverSynced     = false;
 
-    // ── DOM REFS ─────────────────────────────────────
     const timerEl        = document.getElementById('timer');
     const progressFill   = document.getElementById('progress-fill');
     const pctLabel       = document.getElementById('pct-label');
@@ -781,11 +600,10 @@
     const statAdded      = document.getElementById('stat-added');
     const statRemoved    = document.getElementById('stat-removed');
     const detonation     = document.getElementById('detonation');
-    const headerStatus   = document.getElementById('header-status');
     const devBadge       = document.getElementById('dev-status-badge');
     const devAlertBanner = document.getElementById('dev-alert');
 
-    // ── CANVAS BACKGROUND ────────────────────────────
+    // ── CANVAS ───────────────────────────────────────
     const canvas = document.getElementById('bg-canvas');
     const ctx    = canvas.getContext('2d');
     let particles = [], W, H;
@@ -796,28 +614,19 @@
 
     function spawnParticle() {
       const cl = document.body.className;
-      const color = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff2d2d';
+      const color = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff1a1a';
       particles.push({
         x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
-        size: Math.random() * 2 + 0.5, alpha: Math.random() * 0.5 + 0.1, color,
+        vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+        size: Math.random() * 1.5 + 0.5, alpha: Math.random() * 0.3 + 0.05, color,
       });
     }
-    for (let i = 0; i < 80; i++) spawnParticle();
-
-    function drawGrid() {
-      const cl = document.body.className;
-      ctx.strokeStyle = cl.includes('green') ? 'rgba(0,255,136,0.04)' : cl.includes('yellow') ? 'rgba(255,204,0,0.03)' : 'rgba(255,45,45,0.04)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-      for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-    }
+    for (let i = 0; i < 60; i++) spawnParticle();
 
     function animateBg() {
       ctx.clearRect(0, 0, W, H);
-      drawGrid();
-      if (particles.length < 80) spawnParticle();
-      particles = particles.filter(p => p.alpha > 0.02);
+      if (particles.length < 60) spawnParticle();
+      particles = particles.filter(p => p.alpha > 0.01);
       particles.forEach(p => {
         p.x += p.vx; p.y += p.vy;
         if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
@@ -829,13 +638,13 @@
     }
     animateBg();
 
-    function burst(x, y, color, count = 12) {
+    function burst(x, y, color, count = 16) {
       for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 * i) / count;
-        const speed = Math.random() * 3 + 1;
-        const p = { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 3 + 1, alpha: 0.8, color };
+        const speed = Math.random() * 4 + 1.5;
+        const p = { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 4 + 1, alpha: 1, color };
         particles.push(p);
-        const fade = () => { p.alpha -= 0.03; p.vx *= 0.95; p.vy *= 0.95; if (p.alpha > 0.02) requestAnimationFrame(fade); };
+        const fade = () => { p.alpha -= 0.025; p.vx *= 0.93; p.vy *= 0.93; if (p.alpha > 0.01) requestAnimationFrame(fade); };
         fade();
       }
     }
@@ -843,36 +652,35 @@
     // ── COLOR STATE ──────────────────────────────────
     function updateColorState(timeLeft) {
       document.body.classList.remove('state-green', 'state-yellow', 'state-red');
-      if (consecutiveSells >= 2) document.body.classList.add('state-red');
-      else if (timeLeft > 10) document.body.classList.add('state-green');
-      else if (timeLeft > 5)  document.body.classList.add('state-yellow');
-      else                    document.body.classList.add('state-red');
+      if (consecutiveSells >= 2)  document.body.classList.add('state-red');
+      else if (timeLeft > 10)     document.body.classList.add('state-green');
+      else if (timeLeft > 5)      document.body.classList.add('state-yellow');
+      else                        document.body.classList.add('state-red');
       const cl = document.body.className;
-      const col = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff2d2d';
+      const col = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff1a1a';
       particles.forEach(p => p.color = col);
     }
 
-    // ── GLOBAL TIMER ─────────────────────────────────
+    // ── TIMER LOOP ───────────────────────────────────
     setInterval(() => {
       if (!running) return;
       const timeLeft = Math.max(0, (detonatesAt - Date.now()) / 1000);
       timerEl.textContent = Math.ceil(timeLeft);
       const pct = Math.min(100, (timeLeft / BASE_TIME) * 100);
       progressFill.style.width = pct + '%';
-      pctLabel.textContent = Math.round(pct) + '%';
       updateColorState(timeLeft);
       if (timeLeft <= 0 && serverSynced) detonate();
     }, 100);
 
-    // ── FLASH / SHAKE ────────────────────────────────
+    // ── EFFECTS ──────────────────────────────────────
     function flash(color) {
       flashEl.style.background = color;
-      flashEl.style.opacity = '0.25';
-      setTimeout(() => { flashEl.style.opacity = '0'; }, 120);
+      flashEl.style.opacity = '0.3';
+      setTimeout(() => { flashEl.style.opacity = '0'; }, 100);
     }
     function shake() {
       document.body.classList.add('shaking');
-      setTimeout(() => document.body.classList.remove('shaking'), 400);
+      setTimeout(() => document.body.classList.remove('shaking'), 350);
     }
 
     // ── FEED ─────────────────────────────────────────
@@ -881,7 +689,7 @@
     function addFeed(type, addr, amount) {
       const item = document.createElement('div');
       item.className = 'feed-item ' + type;
-      const sign = type === 'buy' ? '+' : '-';
+      const sign = type === 'buy' ? '+' : '−';
       const icon = type === 'buy' ? '▲' : '▼';
       item.innerHTML = `
         <div class="feed-left">
@@ -896,9 +704,8 @@
       if (feedList.children.length > 12) feedList.removeChild(feedList.lastChild);
     }
 
-    // ── VISUAL EFFECTS ───────────────────────────────
     function showBuyEffect(amount, addr) {
-      flash('rgba(0,255,136,0.3)');
+      flash('rgba(0,255,136,0.25)');
       burst(W / 2, H / 2, '#00ff88');
       addFeed('buy', addr, amount);
       consecutiveSells = 0;
@@ -907,11 +714,11 @@
     function showSellEffect(amount, addr) {
       consecutiveSells++;
       shake();
-      flash('rgba(255,45,45,0.4)');
+      flash('rgba(255,26,26,0.35)');
       addFeed('sell', addr, amount);
     }
 
-    // ── SYNC STATE FROM SERVER ───────────────────────
+    // ── SYNC ─────────────────────────────────────────
     function syncState(state) {
       if (!state || !state.detonatesAt) return;
       detonatesAt = Number(state.detonatesAt);
@@ -922,16 +729,14 @@
       statRemoved.textContent = '-' + (state.totalRemoved || 0) + 's';
     }
 
-    // ── DETONATE ─────────────────────────────────────
     function detonate() {
       if (!running) return;
       running = false;
       document.body.style.background = '#000';
       detonation.classList.add('active');
-      for (let i = 0; i < 5; i++) setTimeout(() => flash('rgba(255,45,45,0.8)'), i * 120);
+      for (let i = 0; i < 5; i++) setTimeout(() => flash('rgba(255,26,26,0.9)'), i * 100);
     }
 
-    // ── DEV SELL TRIGGER ─────────────────────────────
     function triggerDevSell(solAmount) {
       devBadge.textContent = 'SELLING 💀';
       devBadge.classList.remove('holding');
@@ -940,13 +745,13 @@
       item.className = 'feed-item dev-sell';
       item.innerHTML = `
         <div class="feed-left"><span class="feed-type">💀 DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
-        <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta">BOOM</span></div>`;
+        <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta" style="color:#fff">BOOM</span></div>`;
       feedList.insertBefore(item, feedList.firstChild);
-      for (let i = 0; i < 6; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.6)'); }, i * 200);
+      for (let i = 0; i < 8; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.7)'); }, i * 150);
       setTimeout(detonate, 1200);
     }
 
-    // ── POLL SERVER STATE ────────────────────────────
+    // ── POLL ─────────────────────────────────────────
     function pollState() {
       fetch('/api/get-state')
         .then(r => r.json())
@@ -956,7 +761,7 @@
     }
     pollState();
 
-    // ── PUMP.FUN WEBSOCKET ───────────────────────────
+    // ── WEBSOCKET ────────────────────────────────────
     let ws = null, reconnectDelay = 2000;
 
     function connectWS() {
@@ -966,13 +771,12 @@
         ws.send(JSON.stringify({ method: 'subscribeTokenTrade',   keys: [TOKEN] }));
         ws.send(JSON.stringify({ method: 'subscribeAccountTrade', keys: [DEV_WALLET] }));
       };
-
       ws.onmessage = (event) => {
         let data;
         try { data = JSON.parse(event.data); } catch { return; }
         if (!data.txType || !data.signature) return;
 
-        const solAmount  = data.solAmount || 0;
+        const solAmount   = data.solAmount || 0;
         const isDevWallet = data.traderPublicKey === DEV_WALLET;
 
         if (isDevWallet && data.txType === 'sell' && (data.mint === TOKEN || !data.mint)) {
@@ -997,7 +801,6 @@
           body: JSON.stringify({ signature: data.signature, txType: data.txType, solAmount, traderAddr: data.traderPublicKey }),
         }).catch(() => {});
       };
-
       ws.onclose = () => {
         if (!running) return;
         setTimeout(connectWS, reconnectDelay);
