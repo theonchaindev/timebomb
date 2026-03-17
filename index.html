@@ -29,288 +29,191 @@
       overflow-x: hidden;
     }
 
-    /* ── FLASH ─────────────────────────────────────── */
-    #flash {
-      position: fixed; inset: 0;
-      pointer-events: none; z-index: 999;
-      opacity: 0; transition: opacity 0.05s;
-    }
-
-    /* ── CANVAS ────────────────────────────────────── */
+    #flash { position: fixed; inset: 0; pointer-events: none; z-index: 999; opacity: 0; transition: opacity 0.05s; }
     #bg-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
-    /* ── LAYOUT ────────────────────────────────────── */
     main {
       position: relative; z-index: 1;
       display: flex; flex-direction: column; align-items: center;
-      padding: 0 1.25rem 6rem;
-    }
-
-    /* ── HEADER ────────────────────────────────────── */
-    header {
-      width: 100%; max-width: 680px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1.1rem 0;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 2.5rem;
-    }
-
-    .logo-img {
-      height: 40px; width: auto;
-      /* no glow, no filter */
-    }
-
-    .live-pill {
-      display: flex; align-items: center; gap: 0.5rem;
-      background: rgba(255,26,26,0.12);
-      border: 1px solid rgba(255,26,26,0.35);
-      border-radius: 2px;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.62rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--red);
-    }
-
-    body.state-green .live-pill {
-      background: rgba(0,255,136,0.1);
-      border-color: rgba(0,255,136,0.3);
-      color: var(--green);
-    }
-
-    .live-dot {
-      width: 6px; height: 6px;
-      background: currentColor;
-      border-radius: 50%;
-      animation: pulse-dot 1s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: 0.4; transform: scale(1.4); }
+      padding: 1.5rem 1.25rem 6rem;
     }
 
     /* ── TITLE LOGO ────────────────────────────────── */
     .title-wrap {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
     }
 
     .title-logo {
-      width: min(260px, 60vw);
+      width: min(240px, 58vw);
       height: auto;
       display: block;
-      margin: 0 auto 1rem;
-      /* no glow */
+      margin: 0 auto 0.85rem;
     }
 
     .subtitle {
-      font-size: clamp(0.6rem, 2.5vw, 0.75rem);
+      font-size: clamp(0.58rem, 2.2vw, 0.72rem);
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    /* ── TIMER ─────────────────────────────────────── */
-    .timer-container {
-      width: 100%; max-width: 680px;
-      margin-bottom: 0;
+    /* ── LIVE PILL (moved inline under logo) ────────── */
+    .live-pill {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      margin-top: 0.6rem;
+      background: rgba(255,26,26,0.12);
+      border: 1px solid rgba(255,26,26,0.35);
+      border-radius: 2px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--red);
     }
+    body.state-green .live-pill { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.3); color: var(--green); }
+    body.state-yellow .live-pill { background: rgba(255,204,0,0.1); border-color: rgba(255,204,0,0.3); color: var(--yellow); }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      background: currentColor; border-radius: 50%;
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(1.4); } }
+
+    /* ── TIMER ─────────────────────────────────────── */
+    .timer-container { width: 100%; max-width: 680px; margin-bottom: 0; }
 
     .timer-block {
       background: var(--accent);
-      padding: clamp(1.5rem, 5vw, 3rem) clamp(1rem, 5vw, 3rem);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+      padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 5vw, 3rem);
+      text-align: center; position: relative; overflow: hidden;
     }
-
     .timer-block::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: repeating-linear-gradient(
-        -45deg,
-        transparent, transparent 8px,
-        rgba(0,0,0,0.08) 8px, rgba(0,0,0,0.08) 16px
-      );
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(0,0,0,0.07) 8px, rgba(0,0,0,0.07) 16px);
       pointer-events: none;
     }
-
     body.state-green  .timer-block { background: var(--green); }
     body.state-yellow .timer-block { background: var(--yellow); }
 
     .timer-label-top {
-      font-size: 0.65rem;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.55);
-      margin-bottom: 0.5rem;
-      position: relative;
+      font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase;
+      color: rgba(0,0,0,0.5); margin-bottom: 0.4rem; position: relative;
     }
 
     #timer {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(6rem, 28vw, 14rem);
-      font-weight: 900;
-      line-height: 1;
-      color: #000;
-      display: block;
-      text-align: center;
-      position: relative;
+      font-size: clamp(6rem, 28vw, 13rem);
+      font-weight: 900; line-height: 1; color: #000;
+      display: block; text-align: center; position: relative;
       letter-spacing: -0.02em;
+      transition: transform 0.1s;
     }
+    body.state-red #timer { animation: critical-pulse 0.4s ease-in-out infinite; }
+    @keyframes critical-pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 
-    body.state-red #timer {
-      animation: critical-pulse 0.4s ease-in-out infinite;
-    }
-    @keyframes critical-pulse {
-      0%,100% { opacity: 1; }
-      50%      { opacity: 0.55; }
-    }
+    /* timer bump on trade */
+    #timer.bump-up   { animation: bump-up 0.3s ease forwards !important; }
+    #timer.bump-down { animation: bump-down 0.3s ease forwards !important; }
+    @keyframes bump-up   { 0% { transform:scale(1); } 50% { transform:scale(1.08); } 100% { transform:scale(1); } }
+    @keyframes bump-down { 0% { transform:scale(1); } 50% { transform:scale(0.94); } 100% { transform:scale(1); } }
 
     .timer-sub {
-      font-size: clamp(0.55rem, 2vw, 0.65rem);
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: rgba(0,0,0,0.45);
-      margin-top: 0.5rem;
-      position: relative;
+      font-size: clamp(0.52rem, 1.8vw, 0.62rem); letter-spacing: 0.22em;
+      text-transform: uppercase; color: rgba(0,0,0,0.4);
+      margin-top: 0.4rem; position: relative;
     }
+
+    /* ── DELTA POPUP ────────────────────────────────── */
+    .delta-pop {
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1.5rem, 6vw, 2.5rem);
+      font-weight: 900;
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      animation: delta-float 0.9s ease forwards;
+    }
+    .delta-pop.up   { color: #000; bottom: 100%; }
+    .delta-pop.down { color: #000; top: 100%; animation-name: delta-sink; }
+    @keyframes delta-float { 0% { opacity:1; transform:translateX(-50%) translateY(0); } 100% { opacity:0; transform:translateX(-50%) translateY(-60px); } }
+    @keyframes delta-sink  { 0% { opacity:1; transform:translateX(-50%) translateY(0); } 100% { opacity:0; transform:translateX(-50%) translateY(60px); } }
 
     /* ── PROGRESS ──────────────────────────────────── */
-    .progress-track {
-      width: 100%; max-width: 680px;
-      height: 8px;
-      background: var(--border);
-    }
-
+    .progress-track { width: 100%; max-width: 680px; height: 8px; background: var(--border); }
     #progress-fill {
-      height: 100%;
-      background: var(--accent);
+      height: 100%; background: var(--accent);
       transition: width 0.5s ease, background 0.5s;
     }
-
     body.state-green  #progress-fill { background: var(--green); }
     body.state-yellow #progress-fill { background: var(--yellow); }
 
     /* ── STATS ─────────────────────────────────────── */
     .stats-row {
       width: 100%; max-width: 680px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: grid; grid-template-columns: repeat(4, 1fr);
       border-left: 2px solid var(--border);
-      margin-bottom: 0;
     }
-
     .stat-card {
-      padding: 1.1rem 0.75rem;
+      padding: 1rem 0.5rem;
       border-right: 2px solid var(--border);
       border-bottom: 2px solid var(--border);
-      text-align: center;
-      background: var(--card);
+      text-align: center; background: var(--card);
     }
-
     .stat-value {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(1.1rem, 4.5vw, 1.6rem);
-      font-weight: 900;
-      color: var(--accent);
-      transition: color 0.4s;
-      line-height: 1;
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      font-weight: 900; color: var(--accent);
+      transition: color 0.4s; line-height: 1;
     }
-
     body.state-green  .stat-value { color: var(--green); }
     body.state-yellow .stat-value { color: var(--yellow); }
-
-    .stat-label {
-      font-size: 0.58rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 0.35rem;
-    }
+    .stat-label { font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
 
     /* ── DEV PANEL ─────────────────────────────────── */
     .dev-panel {
       width: 100%; max-width: 680px;
       display: flex; align-items: center; justify-content: space-between;
       gap: 1rem; flex-wrap: wrap;
-      padding: 0.9rem 1rem;
+      padding: 0.85rem 1rem;
       background: var(--card);
       border-left: 2px solid var(--border);
       border-right: 2px solid var(--border);
       border-bottom: 2px solid var(--border);
     }
-
     .dev-left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-
-    .dev-tag {
-      font-size: 0.58rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .dev-addr {
-      font-size: clamp(0.52rem, 1.8vw, 0.65rem);
-      color: rgba(255,255,255,0.35);
-      word-break: break-all;
-    }
-
+    .dev-tag { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); font-weight: 700; }
+    .dev-addr { font-size: clamp(0.5rem, 1.7vw, 0.62rem); color: rgba(255,255,255,0.3); word-break: break-all; }
     .dev-status-badge {
-      font-size: 0.62rem;
-      padding: 0.3rem 0.8rem;
-      border: 2px solid var(--red);
-      color: var(--red);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      background: transparent;
-      transition: all 0.3s;
-      flex-shrink: 0;
+      font-size: 0.6rem; padding: 0.3rem 0.8rem;
+      border: 2px solid var(--red); color: var(--red);
+      letter-spacing: 0.12em; text-transform: uppercase;
+      white-space: nowrap; background: transparent; transition: all 0.3s; flex-shrink: 0;
     }
-
-    .dev-status-badge.holding {
-      border-color: var(--green);
-      color: var(--green);
-    }
+    .dev-status-badge.holding { border-color: var(--green); color: var(--green); }
 
     /* ── RULES ─────────────────────────────────────── */
     .rules-wrap {
       width: 100%; max-width: 680px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: grid; grid-template-columns: 1fr 1fr;
       border-left: 2px solid var(--border);
-      margin-bottom: 0;
     }
-
     .rule-card {
-      padding: 1.1rem 1rem;
-      border-right: 2px solid var(--border);
-      border-bottom: 2px solid var(--border);
-      background: var(--card);
-      display: flex; align-items: flex-start; gap: 0.75rem;
+      padding: 1rem; border-right: 2px solid var(--border); border-bottom: 2px solid var(--border);
+      background: var(--card); display: flex; align-items: flex-start; gap: 0.7rem;
     }
-
-    .rule-icon { font-size: 1.2rem; flex-shrink: 0; }
-
+    .rule-icon { font-size: 1.1rem; flex-shrink: 0; }
     .rule-title {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(0.6rem, 2vw, 0.7rem);
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 0.3rem;
+      font-family: 'Orbitron', monospace; font-size: clamp(0.58rem, 1.9vw, 0.68rem);
+      font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.25rem;
     }
-
     .rule-card.buy  .rule-title { color: var(--green); }
     .rule-card.sell .rule-title { color: var(--red); }
-
-    .rule-desc {
-      font-size: clamp(0.62rem, 2.2vw, 0.72rem);
-      color: var(--muted);
-      line-height: 1.5;
-    }
+    .rule-desc { font-size: clamp(0.6rem, 2vw, 0.7rem); color: var(--muted); line-height: 1.45; }
 
     /* ── FEED ──────────────────────────────────────── */
     .feed-wrap {
@@ -319,159 +222,115 @@
       border-right: 2px solid var(--border);
       border-bottom: 2px solid var(--border);
     }
-
     .feed-header {
       display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.65rem 1rem;
-      border-bottom: 2px solid var(--border);
-      font-size: 0.62rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      background: var(--card);
+      padding: 0.6rem 1rem; border-bottom: 2px solid var(--border);
+      font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); background: var(--card);
     }
-
-    #feed-list {
-      display: flex; flex-direction: column;
-      max-height: 240px; overflow: hidden; position: relative;
-    }
-
+    #feed-list { display: flex; flex-direction: column; max-height: 230px; overflow: hidden; position: relative; }
     #feed-list::after {
-      content: ''; position: absolute;
-      bottom: 0; left: 0; right: 0; height: 60px;
-      background: linear-gradient(transparent, var(--bg));
-      pointer-events: none;
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 55px;
+      background: linear-gradient(transparent, var(--bg)); pointer-events: none;
     }
-
     .feed-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.55rem 1rem;
-      font-size: clamp(0.6rem, 2.2vw, 0.68rem);
+      padding: 0.5rem 1rem; font-size: clamp(0.58rem, 2vw, 0.66rem);
       border-bottom: 1px solid var(--border);
-      animation: slide-in 0.25s ease forwards;
+      animation: slide-in 0.2s ease forwards;
     }
-
-    @keyframes slide-in {
-      from { opacity: 0; transform: translateY(-5px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .feed-item.buy  { background: rgba(0,255,136,0.06); }
-    .feed-item.sell { background: rgba(255,26,26,0.06); }
-
-    .feed-left  { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+    @keyframes slide-in { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+    .feed-item.buy  { background: rgba(0,255,136,0.07); }
+    .feed-item.sell { background: rgba(255,26,26,0.07); }
+    .feed-left  { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
     .feed-type  { font-weight: 700; letter-spacing: 0.05em; white-space: nowrap; }
     .feed-item.buy  .feed-type { color: var(--green); }
     .feed-item.sell .feed-type { color: var(--red); }
-    .feed-addr  { color: rgba(255,255,255,0.25); font-size: 0.58rem; }
-    .feed-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; margin-left: 0.5rem; }
-    .feed-amount { font-weight: 700; color: #fff; white-space: nowrap; font-size: 0.68rem; }
-    .feed-delta  { font-size: 0.6rem; white-space: nowrap; }
+    .feed-addr  { color: rgba(255,255,255,0.22); font-size: 0.56rem; }
+    .feed-right { display: flex; align-items: center; gap: 0.7rem; flex-shrink: 0; margin-left: 0.5rem; }
+    .feed-amount { font-weight: 700; color: #fff; white-space: nowrap; }
+    .feed-delta  { font-size: 0.58rem; white-space: nowrap; }
     .feed-item.buy  .feed-delta { color: var(--green); }
     .feed-item.sell .feed-delta { color: var(--red); }
-
     .feed-item.dev-sell { background: rgba(255,0,0,0.15); border-color: rgba(255,0,0,0.3); }
     .feed-item.dev-sell .feed-type { color: #fff; }
 
     /* ── DEV SELL ALERT ─────────────────────────────── */
     #dev-alert {
-      display: none;
-      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
-      background: var(--red);
-      padding: 0.75rem 1rem;
-      text-align: center;
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(0.65rem, 3vw, 0.85rem);
-      font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;
-      color: #fff;
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      background: var(--red); padding: 0.7rem 1rem; text-align: center;
+      font-family: 'Orbitron', monospace; font-size: clamp(0.62rem, 2.8vw, 0.82rem);
+      font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: #fff;
       animation: flash-bar 0.3s ease infinite alternate;
     }
-    @keyframes flash-bar { from { opacity: 1; } to { opacity: 0.65; } }
+    @keyframes flash-bar { from { opacity:1; } to { opacity:0.6; } }
     #dev-alert.show { display: block; }
 
     /* ── DETONATION SCREEN ─────────────────────────── */
     #detonation {
-      display: none; position: fixed; inset: 0; z-index: 9999;
-      background: #000;
+      display: none; position: fixed; inset: 0; z-index: 9999; background: #000;
       flex-direction: column; align-items: center; justify-content: center;
       text-align: center; padding: 2rem;
     }
     #detonation.active { display: flex; }
-
-    .det-logo {
-      width: min(220px, 55vw); height: auto;
-      animation: explode 0.5s ease forwards;
-      margin-bottom: 1.5rem;
-    }
-    @keyframes explode {
-      0%  { transform: scale(0.4); opacity: 0; }
-      65% { transform: scale(1.15); }
-      100%{ transform: scale(1);   opacity: 1; }
-    }
-
+    .det-logo { width: min(200px, 52vw); height: auto; animation: explode 0.5s ease forwards; margin-bottom: 1.25rem; }
+    @keyframes explode { 0% { transform:scale(0.4); opacity:0; } 65% { transform:scale(1.15); } 100% { transform:scale(1); opacity:1; } }
     .det-title {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(2.5rem, 10vw, 5rem);
-      font-weight: 900;
-      color: var(--red);
-      margin-bottom: 0.75rem;
+      font-family: 'Orbitron', monospace; font-size: clamp(2.5rem, 10vw, 5rem);
+      font-weight: 900; color: var(--red); margin-bottom: 0.6rem;
       animation: glitch-text 0.1s infinite alternate;
     }
     @keyframes glitch-text {
-      0%   { clip-path: inset(0 0 0 0); transform: translate(0); }
-      25%  { clip-path: inset(25% 0 35% 0); transform: translate(-3px, 2px); }
-      50%  { clip-path: inset(55% 0 10% 0); transform: translate(3px, -2px); }
-      75%  { clip-path: inset(10% 0 55% 0); transform: translate(-2px, 3px); }
-      100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+      0%  { clip-path:inset(0 0 0 0); transform:translate(0); }
+      25% { clip-path:inset(25% 0 35% 0); transform:translate(-3px,2px); }
+      50% { clip-path:inset(55% 0 10% 0); transform:translate(3px,-2px); }
+      75% { clip-path:inset(10% 0 55% 0); transform:translate(-2px,3px); }
+      100%{ clip-path:inset(0 0 0 0); transform:translate(0); }
     }
-
-    .det-sub {
-      font-size: clamp(0.6rem, 2.5vw, 0.8rem);
-      color: var(--muted); letter-spacing: 0.2em;
-      text-transform: uppercase; margin-bottom: 2rem;
-    }
-
-    .det-wallet {
-      font-size: clamp(0.5rem, 1.8vw, 0.62rem);
-      color: rgba(255,255,255,0.2);
-    }
+    .det-sub { font-size: clamp(0.58rem, 2.2vw, 0.76rem); color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 1.5rem; }
+    .det-wallet { font-size: clamp(0.48rem, 1.7vw, 0.6rem); color: rgba(255,255,255,0.2); }
     .det-wallet a { color: rgba(255,255,255,0.3); text-decoration: none; word-break: break-all; }
 
     /* ── SHAKE ─────────────────────────────────────── */
     @keyframes shake {
-      0%,100% { transform: translate(0,0); }
-      15% { transform: translate(-5px, 3px); }
-      30% { transform: translate(5px, -3px); }
-      45% { transform: translate(-7px, 4px); }
-      60% { transform: translate(7px, -4px); }
-      75% { transform: translate(-4px, 2px); }
-      90% { transform: translate(4px, -2px); }
+      0%,100% { transform:translate(0,0); }
+      12% { transform:translate(-6px,3px); }
+      25% { transform:translate(6px,-3px); }
+      37% { transform:translate(-8px,5px); }
+      50% { transform:translate(8px,-5px); }
+      62% { transform:translate(-5px,3px); }
+      75% { transform:translate(5px,-3px); }
+      87% { transform:translate(-3px,2px); }
     }
-    body.shaking main { animation: shake 0.35s ease; }
+    body.shaking main { animation: shake 0.4s ease; }
+
+    /* ── AUDIO UNLOCK HINT ──────────────────────────── */
+    #audio-hint {
+      position: fixed; bottom: 1.5rem; right: 1rem; z-index: 50;
+      font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(255,255,255,0.2); pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    #audio-hint.hidden { opacity: 0; }
 
     /* ── FOOTER ────────────────────────────────────── */
     .footer-text {
-      position: fixed;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 0.85rem);
+      position: fixed; bottom: calc(env(safe-area-inset-bottom,0px) + 0.75rem);
       left: 50%; transform: translateX(-50%);
-      font-size: 0.5rem; color: rgba(255,255,255,0.1);
-      letter-spacing: 0.12em; text-transform: uppercase;
-      white-space: nowrap; z-index: 1;
+      font-size: 0.48rem; color: rgba(255,255,255,0.08);
+      letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; z-index: 1;
     }
 
     /* ── MOBILE ────────────────────────────────────── */
     @media (max-width: 480px) {
-      header { margin-bottom: 1.75rem; }
-      .logo-img { height: 34px; }
-      .title-logo { width: min(200px, 68vw); }
+      main { padding: 1rem 0.85rem 5rem; }
+      .title-logo { width: min(190px, 65vw); }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .rules-wrap { grid-template-columns: 1fr; }
       .footer-text { display: none; }
     }
-
     @media (max-width: 360px) {
-      .logo-img { height: 28px; }
-      .title-logo { width: 170px; }
+      .title-logo { width: 160px; }
     }
   </style>
 </head>
@@ -479,6 +338,7 @@
 
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
+  <div id="audio-hint">🔇 Tap to enable audio</div>
 
   <div id="dev-alert">⚠️ DEV WALLET IS SELLING — BOMB DETONATING ⚠️</div>
 
@@ -487,7 +347,7 @@
     <div class="det-title">DETONATED</div>
     <div class="det-sub">Dev wallet dumped — you failed to survive</div>
     <div class="det-wallet">
-      <div style="margin-bottom:0.4rem; color:rgba(255,26,26,0.5); letter-spacing:0.2em; font-size:0.55rem;">DEV WALLET</div>
+      <div style="margin-bottom:0.35rem;color:rgba(255,26,26,0.45);letter-spacing:0.18em;font-size:0.52rem;">DEV WALLET</div>
       <a href="https://solscan.io/account/6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm" target="_blank">
         6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm
       </a>
@@ -495,22 +355,19 @@
   </div>
 
   <main>
-    <header>
-      <img src="/boom-tp.png" alt="BOOM" class="logo-img" />
-      <div class="live-pill">
-        <div class="live-dot"></div>
-        <span id="header-status">LIVE ON SOLANA</span>
-      </div>
-    </header>
-
+    <!-- LOGO -->
     <div class="title-wrap">
       <img src="/boom-tp.png" alt="BOOM" class="title-logo" />
       <div class="subtitle">Buy to survive · Sell to detonate</div>
+      <div class="live-pill">
+        <div class="live-dot"></div>
+        <span>Live on Solana</span>
+      </div>
     </div>
 
-    <!-- TIMER BLOCK -->
+    <!-- TIMER -->
     <div class="timer-container">
-      <div class="timer-block">
+      <div class="timer-block" id="timer-block">
         <div class="timer-label-top">Time Remaining</div>
         <span id="timer">600</span>
         <div class="timer-sub">Seconds Until Detonation</div>
@@ -522,22 +379,10 @@
 
     <!-- STATS -->
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-value" id="stat-buys">0</div>
-        <div class="stat-label">Buys</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-sells">0</div>
-        <div class="stat-label">Sells</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-added">+0s</div>
-        <div class="stat-label">Added</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-removed">-0s</div>
-        <div class="stat-label">Burned</div>
-      </div>
+      <div class="stat-card"><div class="stat-value" id="stat-buys">0</div><div class="stat-label">Buys</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-sells">0</div><div class="stat-label">Sells</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-added">+0s</div><div class="stat-label">Added</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-removed">-0s</div><div class="stat-label">Burned</div></div>
     </div>
 
     <!-- DEV WALLET -->
@@ -562,7 +407,7 @@
         <div class="rule-icon">📉</div>
         <div>
           <div class="rule-title">Sell &gt; 0.1 SOL</div>
-          <div class="rule-desc">Removes <strong>-1 second</strong>. Traitors die first.</div>
+          <div class="rule-desc">Removes <strong>−1 second</strong>. Traitors die first.</div>
         </div>
       </div>
     </div>
@@ -589,10 +434,11 @@
     let running          = true;
     let consecutiveSells = 0;
     let serverSynced     = false;
+    let lastTickSecond   = -1;
 
     const timerEl        = document.getElementById('timer');
+    const timerBlock     = document.getElementById('timer-block');
     const progressFill   = document.getElementById('progress-fill');
-    const pctLabel       = document.getElementById('pct-label');
     const feedList       = document.getElementById('feed-list');
     const flashEl        = document.getElementById('flash');
     const statBuys       = document.getElementById('stat-buys');
@@ -602,6 +448,125 @@
     const detonation     = document.getElementById('detonation');
     const devBadge       = document.getElementById('dev-status-badge');
     const devAlertBanner = document.getElementById('dev-alert');
+    const audioHint      = document.getElementById('audio-hint');
+
+    // ── AUDIO ────────────────────────────────────────
+    let audioCtx = null;
+
+    function unlockAudio() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      audioHint.classList.add('hidden');
+    }
+    document.addEventListener('click',      unlockAudio, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+
+    function playTick(mode) {
+      // mode: 'normal' | 'urgent' | 'critical'
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      const freq  = mode === 'critical' ? 1400 : mode === 'urgent' ? 1000 : 700;
+      const vol   = mode === 'critical' ? 0.22  : mode === 'urgent' ? 0.18  : 0.12;
+      const dur   = mode === 'critical' ? 0.06  : 0.09;
+
+      const osc  = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(vol, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.start(t);
+      osc.stop(t + dur);
+
+      // second click for critical
+      if (mode === 'critical') {
+        const osc2  = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(audioCtx.destination);
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(900, t + 0.08);
+        gain2.gain.setValueAtTime(0.15, t + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        osc2.start(t + 0.08); osc2.stop(t + 0.14);
+      }
+    }
+
+    function playBuySound() {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      [0, 0.08, 0.16].forEach((delay, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400 + i * 120, t + delay);
+        gain.gain.setValueAtTime(0.12, t + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.12);
+        osc.start(t + delay); osc.stop(t + delay + 0.15);
+      });
+    }
+
+    function playSellSound() {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+      // descending blip
+      [0, 0.1].forEach((delay, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(500 - i * 200, t + delay);
+        gain.gain.setValueAtTime(0.14, t + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.15);
+        osc.start(t + delay); osc.stop(t + delay + 0.18);
+      });
+    }
+
+    function playKaboom() {
+      if (!audioCtx) return;
+      const t = audioCtx.currentTime;
+
+      // white noise burst
+      const sampleRate = audioCtx.sampleRate;
+      const buf = audioCtx.createBuffer(1, sampleRate * 2, sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buf;
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.setValueAtTime(800, t);
+      noiseFilter.frequency.exponentialRampToValueAtTime(60, t + 1.2);
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(1.2, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+      noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+      noise.start(t); noise.stop(t + 2);
+
+      // sub bass
+      const sub = audioCtx.createOscillator();
+      const subGain = audioCtx.createGain();
+      sub.connect(subGain); subGain.connect(audioCtx.destination);
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(90, t);
+      sub.frequency.exponentialRampToValueAtTime(18, t + 1.5);
+      subGain.gain.setValueAtTime(1.0, t);
+      subGain.gain.exponentialRampToValueAtTime(0.001, t + 2);
+      sub.start(t); sub.stop(t + 2.2);
+
+      // mid crack
+      const crack = audioCtx.createOscillator();
+      const crackGain = audioCtx.createGain();
+      crack.connect(crackGain); crackGain.connect(audioCtx.destination);
+      crack.type = 'sawtooth';
+      crack.frequency.setValueAtTime(200, t);
+      crack.frequency.exponentialRampToValueAtTime(30, t + 0.4);
+      crackGain.gain.setValueAtTime(0.7, t);
+      crackGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      crack.start(t); crack.stop(t + 0.6);
+    }
 
     // ── CANVAS ───────────────────────────────────────
     const canvas = document.getElementById('bg-canvas');
@@ -615,47 +580,42 @@
     function spawnParticle() {
       const cl = document.body.className;
       const color = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff1a1a';
-      particles.push({
-        x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
-        size: Math.random() * 1.5 + 0.5, alpha: Math.random() * 0.3 + 0.05, color,
-      });
+      particles.push({ x: Math.random()*W, y: Math.random()*H, vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3, size:Math.random()*1.5+.5, alpha:Math.random()*.25+.05, color });
     }
     for (let i = 0; i < 60; i++) spawnParticle();
 
     function animateBg() {
-      ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0,0,W,H);
       if (particles.length < 60) spawnParticle();
       particles = particles.filter(p => p.alpha > 0.01);
       particles.forEach(p => {
         p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill(); ctx.globalAlpha = 1;
+        if (p.x<0) p.x=W; if (p.x>W) p.x=0; if (p.y<0) p.y=H; if (p.y>H) p.y=0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fillStyle=p.color; ctx.globalAlpha=p.alpha; ctx.fill(); ctx.globalAlpha=1;
       });
       requestAnimationFrame(animateBg);
     }
     animateBg();
 
-    function burst(x, y, color, count = 16) {
+    function burst(x, y, color, count = 20) {
       for (let i = 0; i < count; i++) {
-        const angle = (Math.PI * 2 * i) / count;
-        const speed = Math.random() * 4 + 1.5;
-        const p = { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 4 + 1, alpha: 1, color };
+        const angle = (Math.PI*2*i)/count;
+        const speed = Math.random()*5+2;
+        const p = { x, y, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed, size:Math.random()*5+1, alpha:1, color };
         particles.push(p);
-        const fade = () => { p.alpha -= 0.025; p.vx *= 0.93; p.vy *= 0.93; if (p.alpha > 0.01) requestAnimationFrame(fade); };
+        const fade = () => { p.alpha-=0.02; p.vx*=0.93; p.vy*=0.93; if(p.alpha>0.01) requestAnimationFrame(fade); };
         fade();
       }
     }
 
     // ── COLOR STATE ──────────────────────────────────
     function updateColorState(timeLeft) {
-      document.body.classList.remove('state-green', 'state-yellow', 'state-red');
-      if (consecutiveSells >= 2)  document.body.classList.add('state-red');
-      else if (timeLeft > 10)     document.body.classList.add('state-green');
-      else if (timeLeft > 5)      document.body.classList.add('state-yellow');
-      else                        document.body.classList.add('state-red');
+      document.body.classList.remove('state-green','state-yellow','state-red');
+      if      (consecutiveSells >= 2) document.body.classList.add('state-red');
+      else if (timeLeft > 10)         document.body.classList.add('state-green');
+      else if (timeLeft > 5)          document.body.classList.add('state-yellow');
+      else                            document.body.classList.add('state-red');
       const cl = document.body.className;
       const col = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff1a1a';
       particles.forEach(p => p.color = col);
@@ -665,26 +625,46 @@
     setInterval(() => {
       if (!running) return;
       const timeLeft = Math.max(0, (detonatesAt - Date.now()) / 1000);
-      timerEl.textContent = Math.ceil(timeLeft);
+      const second = Math.ceil(timeLeft);
+
+      timerEl.textContent = second;
       const pct = Math.min(100, (timeLeft / BASE_TIME) * 100);
       progressFill.style.width = pct + '%';
       updateColorState(timeLeft);
+
+      // countdown tick
+      if (second !== lastTickSecond && second > 0 && serverSynced) {
+        lastTickSecond = second;
+        const mode = timeLeft <= 5 ? 'critical' : timeLeft <= 20 ? 'urgent' : 'normal';
+        playTick(mode);
+      }
+
       if (timeLeft <= 0 && serverSynced) detonate();
     }, 100);
 
-    // ── EFFECTS ──────────────────────────────────────
-    function flash(color) {
+    // ── FLASH / SHAKE ────────────────────────────────
+    function flash(color, strength = 0.3) {
       flashEl.style.background = color;
-      flashEl.style.opacity = '0.3';
+      flashEl.style.opacity = String(strength);
       setTimeout(() => { flashEl.style.opacity = '0'; }, 100);
     }
     function shake() {
       document.body.classList.add('shaking');
-      setTimeout(() => document.body.classList.remove('shaking'), 350);
+      setTimeout(() => document.body.classList.remove('shaking'), 400);
+    }
+
+    // ── DELTA POPUP ──────────────────────────────────
+    function showDelta(type) {
+      const el = document.createElement('div');
+      el.className = 'delta-pop ' + (type === 'buy' ? 'up' : 'down');
+      el.textContent = type === 'buy' ? '+1s' : '−1s';
+      timerBlock.style.position = 'relative';
+      timerBlock.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
     }
 
     // ── FEED ─────────────────────────────────────────
-    function shortAddr(addr) { return addr ? addr.slice(0,4) + '…' + addr.slice(-4) : '???'; }
+    function shortAddr(addr) { return addr ? addr.slice(0,4)+'…'+addr.slice(-4) : '???'; }
 
     function addFeed(type, addr, amount) {
       const item = document.createElement('div');
@@ -704,18 +684,30 @@
       if (feedList.children.length > 12) feedList.removeChild(feedList.lastChild);
     }
 
+    // ── VISUAL EFFECTS ───────────────────────────────
     function showBuyEffect(amount, addr) {
-      flash('rgba(0,255,136,0.25)');
-      burst(W / 2, H / 2, '#00ff88');
+      flash('rgba(0,255,136,0.3)');
+      burst(W/2, H/2, '#00ff88');
       addFeed('buy', addr, amount);
+      showDelta('buy');
+      timerEl.classList.remove('bump-up','bump-down');
+      void timerEl.offsetWidth; // reflow
+      timerEl.classList.add('bump-up');
+      playBuySound();
       consecutiveSells = 0;
     }
 
     function showSellEffect(amount, addr) {
       consecutiveSells++;
       shake();
-      flash('rgba(255,26,26,0.35)');
+      flash('rgba(255,26,26,0.45)', 0.45);
+      burst(W/2, H/2, '#ff1a1a', 14);
       addFeed('sell', addr, amount);
+      showDelta('sell');
+      timerEl.classList.remove('bump-up','bump-down');
+      void timerEl.offsetWidth;
+      timerEl.classList.add('bump-down');
+      playSellSound();
     }
 
     // ── SYNC ─────────────────────────────────────────
@@ -732,9 +724,10 @@
     function detonate() {
       if (!running) return;
       running = false;
+      playKaboom();
       document.body.style.background = '#000';
       detonation.classList.add('active');
-      for (let i = 0; i < 5; i++) setTimeout(() => flash('rgba(255,26,26,0.9)'), i * 100);
+      for (let i = 0; i < 6; i++) setTimeout(() => flash('rgba(255,26,26,0.9)', 0.9), i * 100);
     }
 
     function triggerDevSell(solAmount) {
@@ -747,7 +740,7 @@
         <div class="feed-left"><span class="feed-type">💀 DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
         <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta" style="color:#fff">BOOM</span></div>`;
       feedList.insertBefore(item, feedList.firstChild);
-      for (let i = 0; i < 8; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.7)'); }, i * 150);
+      for (let i = 0; i < 8; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.7)', 0.7); }, i * 150);
       setTimeout(detonate, 1200);
     }
 
