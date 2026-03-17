@@ -780,17 +780,18 @@
 
   <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump &nbsp;·&nbsp; Dev wallet sells at 0 &nbsp;·&nbsp; Built on Solana</div>
 
+  <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
   <script>
-    // ── STATE ────────────────────────────────────────
-    const MAX_TIME = 60;
-    let timeLeft = MAX_TIME;
+    // ── CONSTANTS ────────────────────────────────────
+    const TOKEN = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
+    const DEV_WALLET = '6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm';
+    const WS_URL = 'wss://pumpportal.fun/api/data';
+    const BASE_TIME = 60;
+
+    // ── STATE (authoritative value from server) ──────
+    let detonatesAt = Date.now() + BASE_TIME * 1000;
     let running = true;
-    let totalBuys = 0;
-    let totalSells = 0;
-    let totalAdded = 0;
-    let totalRemoved = 0;
     let consecutiveSells = 0;
-    let lastEventWasSell = false;
 
     // ── DOM REFS ─────────────────────────────────────
     const timerEl = document.getElementById('timer');
@@ -803,6 +804,9 @@
     const statAdded = document.getElementById('stat-added');
     const statRemoved = document.getElementById('stat-removed');
     const detonation = document.getElementById('detonation');
+    const headerStatus = document.getElementById('header-status');
+    const devBadge = document.getElementById('dev-status-badge');
+    const devAlertBanner = document.getElementById('dev-alert');
 
     // ── CANVAS BACKGROUND ────────────────────────────
     const canvas = document.getElementById('bg-canvas');
@@ -817,39 +821,23 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // Grid + particles
     function spawnParticle() {
-      const state = document.body.className;
-      let color = state.includes('green') ? '#00ff88' :
-                  state.includes('yellow') ? '#ffcc00' : '#ff2d2d';
+      const cl = document.body.className;
+      const color = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff2d2d';
       particles.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        size: Math.random() * 2 + 0.5,
-        alpha: Math.random() * 0.5 + 0.1,
-        color,
-        life: 1
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 2 + 0.5, alpha: Math.random() * 0.5 + 0.1, color,
       });
     }
-
     for (let i = 0; i < 80; i++) spawnParticle();
 
     function drawGrid() {
-      const state = document.body.className;
-      const col = state.includes('green') ? 'rgba(0,255,136,0.04)' :
-                  state.includes('yellow') ? 'rgba(255,204,0,0.03)' :
-                  'rgba(255,45,45,0.04)';
-      ctx.strokeStyle = col;
+      const cl = document.body.className;
+      ctx.strokeStyle = cl.includes('green') ? 'rgba(0,255,136,0.04)' : cl.includes('yellow') ? 'rgba(255,204,0,0.03)' : 'rgba(255,45,45,0.04)';
       ctx.lineWidth = 1;
-      const spacing = 60;
-      for (let x = 0; x < W; x += spacing) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
-      }
-      for (let y = 0; y < H; y += spacing) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      }
+      for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
     }
 
     function animateBg() {
@@ -861,246 +849,199 @@
         p.x += p.vx; p.y += p.vy;
         if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
         if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.alpha;
-        ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha; ctx.fill(); ctx.globalAlpha = 1;
       });
       requestAnimationFrame(animateBg);
     }
     animateBg();
 
-    // ── BURST PARTICLES ON BUY ───────────────────────
     function burst(x, y, color, count = 12) {
       for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 * i) / count;
         const speed = Math.random() * 3 + 1;
-        particles.push({
-          x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: Math.random() * 3 + 1,
-          alpha: 0.8,
-          color,
-          life: 1
-        });
-        // fade out burst particles faster
-        const last = particles[particles.length - 1];
-        const fade = () => { last.alpha -= 0.03; last.vx *= 0.95; last.vy *= 0.95; if (last.alpha > 0.02) requestAnimationFrame(fade); };
+        const p = { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, size: Math.random() * 3 + 1, alpha: 0.8, color };
+        particles.push(p);
+        const fade = () => { p.alpha -= 0.03; p.vx *= 0.95; p.vy *= 0.95; if (p.alpha > 0.02) requestAnimationFrame(fade); };
         fade();
       }
     }
 
     // ── COLOR STATE ──────────────────────────────────
-    function updateState() {
+    function updateColorState(timeLeft) {
       document.body.classList.remove('state-green', 'state-yellow', 'state-red');
-      if (consecutiveSells >= 2) {
-        document.body.classList.add('state-red');
-      } else if (timeLeft > 10) {
-        document.body.classList.add('state-green');
-      } else if (timeLeft > 5) {
-        document.body.classList.add('state-yellow');
-      } else {
-        document.body.classList.add('state-red');
-      }
-      particles.forEach(p => {
-        const state = document.body.className;
-        p.color = state.includes('green') ? '#00ff88' :
-                  state.includes('yellow') ? '#ffcc00' : '#ff2d2d';
-      });
+      if (consecutiveSells >= 2) document.body.classList.add('state-red');
+      else if (timeLeft > 10) document.body.classList.add('state-green');
+      else if (timeLeft > 5) document.body.classList.add('state-yellow');
+      else document.body.classList.add('state-red');
+      const cl = document.body.className;
+      const col = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff2d2d';
+      particles.forEach(p => p.color = col);
     }
 
-    // ── TIMER TICK ───────────────────────────────────
+    // ── GLOBAL TIMER (computed from server detonatesAt) ──
     setInterval(() => {
       if (!running) return;
-      timeLeft = Math.max(0, timeLeft - 1);
-      timerEl.textContent = timeLeft;
-      const pct = (timeLeft / MAX_TIME) * 100;
+      const timeLeft = Math.max(0, (detonatesAt - Date.now()) / 1000);
+      timerEl.textContent = Math.ceil(timeLeft);
+      const pct = Math.min(100, (timeLeft / BASE_TIME) * 100);
       progressFill.style.width = pct + '%';
       pctLabel.textContent = Math.round(pct) + '%';
-      updateState();
-      if (timeLeft === 0) detonate();
-    }, 1000);
+      updateColorState(timeLeft);
+      if (timeLeft <= 0) detonate();
+    }, 100);
 
-    // ── FLASH ────────────────────────────────────────
+    // ── FLASH / SHAKE ────────────────────────────────
     function flash(color) {
       flashEl.style.background = color;
       flashEl.style.opacity = '0.25';
       setTimeout(() => { flashEl.style.opacity = '0'; }, 120);
     }
-
-    // ── SHAKE ────────────────────────────────────────
     function shake() {
       document.body.classList.add('shaking');
       setTimeout(() => document.body.classList.remove('shaking'), 400);
     }
 
-    // ── ADD FEED ITEM ────────────────────────────────
-    function addFeed(type, addr, amount, delta) {
+    // ── FEED ─────────────────────────────────────────
+    function shortAddr(addr) { return addr ? addr.slice(0, 4) + '…' + addr.slice(-4) : '???'; }
+
+    function addFeed(type, addr, amount, qualifies) {
       const item = document.createElement('div');
       item.className = 'feed-item ' + type;
       const sign = type === 'buy' ? '+' : '-';
       const icon = type === 'buy' ? '▲' : '▼';
+      const delta = qualifies ? sign + '1s' : 'small';
       item.innerHTML = `
         <div class="feed-left">
           <span class="feed-type">${icon} ${type.toUpperCase()}</span>
-          <span class="feed-addr">${addr}</span>
+          <span class="feed-addr">${shortAddr(addr)}</span>
         </div>
         <div class="feed-right">
-          <span class="feed-amount">${amount} SOL</span>
-          <span class="feed-delta">${sign}1s</span>
-        </div>
-      `;
+          <span class="feed-amount">${Number(amount).toFixed(3)} SOL</span>
+          <span class="feed-delta">${delta}</span>
+        </div>`;
       feedList.insertBefore(item, feedList.firstChild);
       if (feedList.children.length > 12) feedList.removeChild(feedList.lastChild);
     }
 
-    // ── PROCESS BUY ──────────────────────────────────
-    function processBuy(amount, addr) {
-      if (!running) return;
-      if (amount >= 0.1) {
-        timeLeft = Math.min(timeLeft + 1, 999);
-        totalAdded++;
-        statAdded.textContent = '+' + totalAdded + 's';
-      }
-      totalBuys++;
-      statBuys.textContent = totalBuys;
-      consecutiveSells = 0;
+    // ── VISUAL EFFECTS (called from Ably broadcast) ──
+    function showBuyEffect(amount, addr) {
+      const qualifies = amount >= 0.1;
       flash('rgba(0,255,136,0.3)');
-      burst(W / 2, H / 2, '#00ff88');
-      addFeed('buy', addr, amount.toFixed(2), '+1');
-      updateState();
-      timerEl.textContent = timeLeft;
+      if (qualifies) burst(W / 2, H / 2, '#00ff88');
+      addFeed('buy', addr, amount, qualifies);
+      consecutiveSells = 0;
     }
 
-    // ── PROCESS SELL ─────────────────────────────────
-    function processSell(amount, addr) {
-      if (!running) return;
-      if (amount >= 0.1) {
-        timeLeft = Math.max(0, timeLeft - 1);
-        totalRemoved++;
-        statRemoved.textContent = '-' + totalRemoved + 's';
-        consecutiveSells++;
-        shake();
-      }
-      totalSells++;
-      statSells.textContent = totalSells;
+    function showSellEffect(amount, addr) {
+      const qualifies = amount >= 0.1;
+      if (qualifies) { consecutiveSells++; shake(); }
       flash('rgba(255,45,45,0.4)');
-      addFeed('sell', addr, amount.toFixed(2), '-1');
-      updateState();
-      timerEl.textContent = timeLeft;
-      if (timeLeft === 0) detonate();
+      addFeed('sell', addr, amount, qualifies);
+    }
+
+    // ── SYNC STATE FROM SERVER ───────────────────────
+    function syncState(state) {
+      if (!state || !state.detonatesAt) return;
+      detonatesAt = Number(state.detonatesAt);
+      statBuys.textContent = state.totalBuys || 0;
+      statSells.textContent = state.totalSells || 0;
+      statAdded.textContent = '+' + (state.totalAdded || 0) + 's';
+      statRemoved.textContent = '-' + (state.totalRemoved || 0) + 's';
     }
 
     // ── DETONATE ─────────────────────────────────────
     function detonate() {
+      if (!running) return;
       running = false;
       document.body.style.background = '#000';
       detonation.classList.add('active');
-      for (let i = 0; i < 5; i++) {
-        setTimeout(() => flash('rgba(255,45,45,0.8)'), i * 120);
-      }
+      for (let i = 0; i < 5; i++) setTimeout(() => flash('rgba(255,45,45,0.8)'), i * 120);
     }
 
-    // ── PUMP.FUN WEBSOCKET ────────────────────────────
-    const TOKEN = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
-    const DEV_WALLET = '6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm';
-    const WS_URL = 'wss://pumpportal.fun/api/data';
-    const headerStatus = document.getElementById('header-status');
-    const devBadge = document.getElementById('dev-status-badge');
-    const devAlertBanner = document.getElementById('dev-alert');
-    let ws = null;
-    let reconnectDelay = 2000;
-
-    function shortAddr(addr) {
-      if (!addr) return '???';
-      return addr.slice(0, 4) + '…' + addr.slice(-4);
-    }
-
-    function setStatus(text, color) {
-      headerStatus.textContent = text;
-      headerStatus.style.color = color || '';
-    }
-
+    // ── DEV SELL TRIGGER ─────────────────────────────
     function triggerDevSell(solAmount) {
-      // Update dev badge
       devBadge.textContent = 'SELLING 💀';
       devBadge.classList.remove('holding');
-
-      // Show alert banner
       devAlertBanner.classList.add('show');
-
-      // Add to feed with special class
       const item = document.createElement('div');
       item.className = 'feed-item dev-sell';
       item.innerHTML = `
-        <div class="feed-left">
-          <span class="feed-type">💀 DEV WALLET SELL</span>
-          <span class="feed-addr">${shortAddr(DEV_WALLET)}</span>
-        </div>
-        <div class="feed-right">
-          <span class="feed-amount">${solAmount.toFixed(3)} SOL</span>
-          <span class="feed-delta">BOMB</span>
-        </div>
-      `;
+        <div class="feed-left"><span class="feed-type">💀 DEV WALLET SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
+        <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta">BOMB</span></div>`;
       feedList.insertBefore(item, feedList.firstChild);
-
-      // Shake + flash red hard
-      for (let i = 0; i < 6; i++) {
-        setTimeout(() => { shake(); flash('rgba(255,0,0,0.6)'); }, i * 200);
-      }
-
+      for (let i = 0; i < 6; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.6)'); }, i * 200);
       setTimeout(detonate, 1200);
     }
 
-    function connectWS() {
-      setStatus('CONNECTING…', 'rgba(255,204,0,0.8)');
-      ws = new WebSocket(WS_URL);
+    // ── FETCH INITIAL STATE ──────────────────────────
+    function setStatus(text, color) { headerStatus.textContent = text; headerStatus.style.color = color || ''; }
 
+    fetch('/api/state')
+      .then(r => r.json())
+      .then(syncState)
+      .catch(() => {});
+
+    // ── ABLY REALTIME SYNC ───────────────────────────
+    // All clients receive the same Ably broadcast → timer stays globally in sync
+    const ablyClient = new Ably.Realtime({ authUrl: '/api/ably-token' });
+    ablyClient.connection.on('connected', () => setStatus('LIVE ON SOLANA', ''));
+    ablyClient.connection.on('connecting', () => setStatus('CONNECTING…', 'rgba(255,204,0,0.8)'));
+    ablyClient.connection.on('disconnected', () => setStatus('RECONNECTING…', 'rgba(255,204,0,0.8)'));
+
+    const ablyChannel = ablyClient.channels.get('timebomb');
+    ablyChannel.subscribe('update', (msg) => {
+      const data = typeof msg.data === 'string' ? JSON.parse(msg.data) : msg.data;
+      syncState(data);
+      if (data.txType === 'buy') showBuyEffect(Number(data.solAmount), data.traderAddr);
+      else if (data.txType === 'sell') showSellEffect(Number(data.solAmount), data.traderAddr);
+    });
+
+    // ── PUMP.FUN WEBSOCKET ───────────────────────────
+    // Each client connects but only REPORTS trades to /api/trade (server dedupes by sig)
+    let ws = null;
+    let reconnectDelay = 2000;
+
+    function connectWS() {
+      ws = new WebSocket(WS_URL);
       ws.onopen = () => {
         reconnectDelay = 2000;
-        setStatus('LIVE ON SOLANA', '');
-        // Subscribe to token trades
         ws.send(JSON.stringify({ method: 'subscribeTokenTrade', keys: [TOKEN] }));
-        // Subscribe to dev wallet's account trades to catch early sells
         ws.send(JSON.stringify({ method: 'subscribeAccountTrade', keys: [DEV_WALLET] }));
       };
 
       ws.onmessage = (event) => {
         let data;
         try { data = JSON.parse(event.data); } catch { return; }
-        if (!data.txType) return;
+        if (!data.txType || !data.signature) return;
 
         const solAmount = (data.solAmount || 0) / 1e9;
         const isDevWallet = data.traderPublicKey === DEV_WALLET;
 
-        // Dev wallet sells on this token — immediate detonation
-        if (isDevWallet && data.txType === 'sell' && data.mint === TOKEN) {
+        // Dev wallet sells this token → immediate local detonation (no need to wait for API)
+        if (isDevWallet && data.txType === 'sell' && (data.mint === TOKEN || !data.mint)) {
           if (running) triggerDevSell(solAmount);
           return;
         }
-
-        // Skip dev wallet buys from regular feed
         if (isDevWallet) return;
-
-        // Only process trades for our token (account sub catches all trades)
         if (data.mint && data.mint !== TOKEN) return;
 
-        const addr = shortAddr(data.traderPublicKey);
-        if (data.txType === 'buy') {
-          processBuy(solAmount, addr);
-        } else if (data.txType === 'sell') {
-          processSell(solAmount, addr);
-        }
+        // Report to API — server dedupes, updates Redis, broadcasts to Ably
+        // Visual effects fire via the Ably subscription above (same for all clients)
+        fetch('/api/trade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            signature: data.signature,
+            txType: data.txType,
+            solAmount,
+            traderAddr: data.traderPublicKey,
+          }),
+        }).catch(() => {});
       };
-
-      ws.onerror = () => setStatus('ERROR — RETRYING…', 'rgba(255,45,45,0.8)');
 
       ws.onclose = () => {
         if (!running) return;
-        setStatus('RECONNECTING…', 'rgba(255,204,0,0.8)');
         setTimeout(connectWS, reconnectDelay);
         reconnectDelay = Math.min(reconnectDelay * 1.5, 15000);
       };
