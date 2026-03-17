@@ -442,11 +442,11 @@
       </div>
     </div>
 
-    <!-- CA -->
-    <div class="ca-bar" id="ca-bar" onclick="copyCA()">
+    <!-- CA: hidden until launch -->
+    <div class="ca-bar" id="ca-bar" onclick="copyCA()" style="display:none">
       <div>
         <div class="ca-label">Contract Address</div>
-        <div class="ca-addr" id="ca-addr">A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump</div>
+        <div class="ca-addr" id="ca-addr"></div>
       </div>
       <div class="ca-copy" id="ca-copy">Copy</div>
     </div>
@@ -471,12 +471,12 @@
       <div class="stat-card"><div class="stat-value" id="stat-removed">-0s</div><div class="stat-label">Burned</div></div>
     </div>
 
-    <!-- DEV WALLET -->
-    <div class="dev-panel">
+    <!-- DEV WALLET: hidden until launch -->
+    <div class="dev-panel" id="dev-panel" style="display:none">
       <div class="dev-left">
         <div class="dev-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="13" r="6"/><path d="M14.5 4.5a2.5 2.5 0 0 1 3.5 3.5"/><path d="M13 3l-2 3.5"/><line x1="17" y1="5" x2="19" y2="3"/></svg>Dev Wallet</div>
-        <div class="dev-addr">BoMbKxggGksUH19WPUXcrJkJDRd7RnQZM2qZihNNTo9Y</div>
-        <div class="dev-holding" id="dev-holding">Fetching balance…</div>
+        <div class="dev-addr" id="dev-addr"></div>
+        <div class="dev-holding" id="dev-holding"></div>
       </div>
       <div class="dev-status-badge holding" id="dev-status-badge">HOLDING</div>
     </div>
@@ -509,7 +509,7 @@
     </div>
   </main>
 
-  <div class="footer-text">A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump · Built on Solana</div>
+  <div class="footer-text">Built on Solana</div>
 
   <script>
     function copyCA() {
@@ -526,8 +526,8 @@
       setTimeout(() => { bar.classList.remove('copied'); lbl.textContent = 'Copy'; }, 2000);
     }
 
-    const TOKEN      = 'A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump';
-    const DEV_WALLET = 'BoMbKxggGksUH19WPUXcrJkJDRd7RnQZM2qZihNNTo9Y';
+    const TOKEN      = '';  // set at launch
+    const DEV_WALLET = '';  // set at launch
     const WS_URL     = 'wss://pumpportal.fun/api/data';
     const BASE_TIME  = 100;
 
