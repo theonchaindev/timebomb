@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TIME BOMB — Tick or Die</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #030303;
+      --accent: #ff2d2d;
+      --accent-glow: rgba(255,45,45,0.6);
+      --green: #00ff88;
+      --green-glow: rgba(0,255,136,0.5);
+      --yellow: #ffcc00;
+      --yellow-glow: rgba(255,204,0,0.5);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,0.4);
+      --timer-color: #ff2d2d;
+      --timer-glow: rgba(255,45,45,0.8);
+      --bg-overlay: rgba(255,45,45,0.03);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
+    }
+
+    /* ── CANVAS BACKGROUND ─────────────────────────── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── FLASH OVERLAY ─────────────────────────────── */
+    #flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.05s;
+    }
+
+    /* ── SCANLINES ─────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ── MAIN LAYOUT ───────────────────────────────── */
+    main {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── HEADER ────────────────────────────────────── */
+    header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 3rem;
+    }
+
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--timer-color);
+      text-shadow: 0 0 20px var(--timer-glow);
+      text-transform: uppercase;
+      transition: color 0.5s, text-shadow 0.5s;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--timer-color);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--timer-glow);
+      animation: pulse-dot 1s ease-in-out infinite;
+      transition: background 0.5s, box-shadow 0.5s;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    /* ── BOMB SVG / ICON ───────────────────────────── */
+    .bomb-icon {
+      font-size: 3.5rem;
+      animation: bob 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px var(--timer-glow));
+      transition: filter 0.5s;
+      margin-bottom: 0.5rem;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-8px) rotate(3deg); }
+    }
+
+    /* ── TITLE ─────────────────────────────────────── */
+    .title-wrap {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(3rem, 10vw, 7rem);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--timer-color);
+      text-shadow:
+        0 0 40px var(--timer-glow),
+        0 0 80px var(--timer-glow),
+        0 0 120px rgba(255,45,45,0.3);
+      transition: color 0.5s, text-shadow 0.5s;
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── TIMER DISPLAY ─────────────────────────────── */
+    .timer-container {
+      position: relative;
+      margin-bottom: 2.5rem;
+    }
+
+    .timer-outer {
+      position: relative;
+      padding: 2.5rem 4rem;
+      border: 2px solid var(--timer-color);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.7);
+      box-shadow:
+        0 0 0 1px rgba(255,45,45,0.1),
+        0 0 40px var(--timer-glow),
+        0 0 80px rgba(255,45,45,0.15),
+        inset 0 0 40px rgba(0,0,0,0.8);
+      transition: border-color 0.5s, box-shadow 0.5s;
+    }
+
+    .timer-corner {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-color: var(--timer-color);
+      border-style: solid;
+      transition: border-color 0.5s;
+    }
+    .timer-corner.tl { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
+    .timer-corner.tr { top: -2px; right: -2px; border-width: 2px 2px 0 0; }
+    .timer-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 2px 2px; }
+    .timer-corner.br { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+
+    .timer-label {
+      position: absolute;
+      top: -0.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg);
+      padding: 0 0.75rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      color: var(--timer-color);
+      text-transform: uppercase;
+      transition: color 0.5s;
+    }
+
+    #timer {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(5rem, 18vw, 12rem);
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: var(--timer-color);
+      text-shadow:
+        0 0 20px var(--timer-glow),
+        0 0 60px var(--timer-glow),
+        0 0 100px rgba(255,45,45,0.4);
+      line-height: 1;
+      transition: color 0.3s, text-shadow 0.3s;
+      display: block;
+      min-width: 3ch;
+      text-align: center;
+    }
+
+    .timer-sub {
+      text-align: center;
+      margin-top: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.2);
+      text-transform: uppercase;
+    }
+
+    /* ── PROGRESS BAR ──────────────────────────────── */
+    .progress-wrap {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 3rem;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #progress-fill {
+      height: 100%;
+      background: var(--timer-color);
+      border-radius: 3px;
+      box-shadow: 0 0 12px var(--timer-glow);
+      transition: width 0.5s ease, background 0.5s, box-shadow 0.5s;
+    }
+
+    /* ── STATS ROW ─────────────────────────────────── */
+    .stats-row {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat-card {
+      padding: 1.2rem 2rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      background: rgba(255,255,255,0.02);
+      text-align: center;
+      min-width: 130px;
+      transition: border-color 0.5s, background 0.5s;
+    }
+
+    .stat-card:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--timer-color);
+      text-shadow: 0 0 12px var(--timer-glow);
+      transition: color 0.5s, text-shadow 0.5s;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── RULES ─────────────────────────────────────── */
+    .rules-wrap {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .rule-card {
+      padding: 1.25rem 1.5rem;
+      border-radius: 4px;
+      border: 1px solid;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .rule-card.buy {
+      border-color: rgba(0,255,136,0.2);
+      background: rgba(0,255,136,0.04);
+    }
+
+    .rule-card.sell {
+      border-color: rgba(255,45,45,0.2);
+      background: rgba(255,45,45,0.04);
+    }
+
+    .rule-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .rule-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .rule-card.buy .rule-title { color: var(--green); }
+    .rule-card.sell .rule-title { color: var(--accent); }
+
+    .rule-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── LIVE FEED ─────────────────────────────────── */
+    .feed-wrap {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .feed-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    #feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      max-height: 280px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #feed-list::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(transparent, var(--bg));
+      pointer-events: none;
+    }
+
+    .feed-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      border-radius: 3px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      animation: slide-in 0.3s ease forwards;
+      border: 1px solid transparent;
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feed-item.buy {
+      background: rgba(0,255,136,0.06);
+      border-color: rgba(0,255,136,0.12);
+      color: var(--green);
+    }
+
+    .feed-item.sell {
+      background: rgba(255,45,45,0.06);
+      border-color: rgba(255,45,45,0.12);
+      color: var(--accent);
+    }
+
+    .feed-left { display: flex; align-items: center; gap: 0.5rem; }
+    .feed-type { font-weight: 700; letter-spacing: 0.05em; }
+    .feed-addr { color: rgba(255,255,255,0.3); font-size: 0.65rem; }
+    .feed-right { display: flex; align-items: center; gap: 1rem; }
+    .feed-amount { font-weight: 700; }
+    .feed-delta { font-size: 0.65rem; opacity: 0.7; }
+
+    /* ── DETONATION SCREEN ─────────────────────────── */
+    #detonation {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    #detonation.active { display: flex; }
+
+    .det-emoji { font-size: 8rem; animation: explode 0.5s ease forwards; }
+    @keyframes explode {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.3); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .det-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(3rem, 10vw, 6rem);
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 60px var(--accent-glow);
+      margin: 1rem 0;
+      animation: glitch-text 0.1s infinite alternate;
+    }
+
+    @keyframes glitch-text {
+      0% { clip-path: inset(0 0 0 0); transform: translate(0); }
+      20% { clip-path: inset(20% 0 30% 0); transform: translate(-3px, 2px); }
+      40% { clip-path: inset(50% 0 10% 0); transform: translate(3px, -2px); }
+      60% { clip-path: inset(10% 0 50% 0); transform: translate(-2px, 3px); }
+      80% { clip-path: inset(30% 0 20% 0); transform: translate(2px, -3px); }
+      100% { clip-path: inset(0 0 0 0); transform: translate(0); }
+    }
+
+    .det-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 1rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+    }
+
+    /* ── COLOR STATES ──────────────────────────────── */
+    body.state-green {
+      --timer-color: var(--green);
+      --timer-glow: var(--green-glow);
+      --bg-overlay: rgba(0,255,136,0.04);
+    }
+
+    body.state-yellow {
+      --timer-color: var(--yellow);
+      --timer-glow: var(--yellow-glow);
+      --bg-overlay: rgba(255,204,0,0.03);
+    }
+
+    body.state-red {
+      --timer-color: var(--accent);
+      --timer-glow: var(--accent-glow);
+      --bg-overlay: rgba(255,45,45,0.04);
+    }
+
+    /* ── SHAKE ─────────────────────────────────────── */
+    @keyframes shake {
+      0%, 100% { transform: translate(0,0) rotate(0); }
+      10% { transform: translate(-4px, 2px) rotate(-0.5deg); }
+      20% { transform: translate(4px, -2px) rotate(0.5deg); }
+      30% { transform: translate(-6px, 3px) rotate(-1deg); }
+      40% { transform: translate(6px, -3px) rotate(1deg); }
+      50% { transform: translate(-3px, 4px) rotate(-0.5deg); }
+      60% { transform: translate(3px, -4px) rotate(0.5deg); }
+      70% { transform: translate(-5px, 2px) rotate(-0.5deg); }
+      80% { transform: translate(5px, -2px) rotate(0.5deg); }
+      90% { transform: translate(-2px, 3px) rotate(0); }
+    }
+
+    body.shaking main { animation: shake 0.4s ease; }
+
+    /* ── CRITICAL PULSE ────────────────────────────── */
+    @keyframes critical-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    body.state-red #timer { animation: critical-pulse 0.5s ease-in-out infinite; }
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .footer-text {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.12);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    /* ── RESPONSIVE ────────────────────────────────── */
+    @media (max-width: 600px) {
+      .timer-outer { padding: 1.5rem 2rem; }
+      .rules-wrap { grid-template-columns: 1fr; }
+      .stats-row { gap: 1rem; }
+      .stat-card { min-width: 100px; padding: 1rem 1.25rem; }
+    }
+  </style>
+</head>
+<body class="state-red">
+
+  <canvas id="bg-canvas"></canvas>
+  <div id="flash"></div>
+
+  <!-- DETONATION SCREEN -->
+  <div id="detonation">
+    <div class="det-emoji">💥</div>
+    <div class="det-title">DETONATED</div>
+    <div class="det-sub">DEV WALLET SOLD — YOU FAILED TO SURVIVE</div>
+  </div>
+
+  <main>
+    <header>
+      <div class="logo">💣 TIME BOMB</div>
+      <div class="header-right">
+        <div class="live-dot"></div>
+        <span id="header-status">LIVE ON SOLANA</span>
+      </div>
+    </header>
+
+    <div class="title-wrap">
+      <div class="bomb-icon">💣</div>
+      <h1>TIME BOMB</h1>
+      <div class="subtitle">Buy to survive · Sell to detonate</div>
+    </div>
+
+    <!-- TIMER -->
+    <div class="timer-container">
+      <div class="timer-outer">
+        <div class="timer-corner tl"></div>
+        <div class="timer-corner tr"></div>
+        <div class="timer-corner bl"></div>
+        <div class="timer-corner br"></div>
+        <div class="timer-label">TIME REMAINING</div>
+        <span id="timer">60</span>
+        <div class="timer-sub">SECONDS UNTIL DETONATION</div>
+      </div>
+    </div>
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-wrap">
+      <div class="progress-labels">
+        <span>DETONATION</span>
+        <span id="pct-label">100%</span>
+        <span>SAFE ZONE</span>
+      </div>
+      <div class="progress-track">
+        <div id="progress-fill" style="width:100%"></div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-buys">0</div>
+        <div class="stat-label">Buys</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-sells">0</div>
+        <div class="stat-label">Sells</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-added">+0s</div>
+        <div class="stat-label">Time Added</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-removed">-0s</div>
+        <div class="stat-label">Time Burned</div>
+      </div>
+    </div>
+
+    <!-- RULES -->
+    <div class="rules-wrap">
+      <div class="rule-card buy">
+        <div class="rule-icon">📈</div>
+        <div>
+          <div class="rule-title">Buy &gt; 0.1 SOL</div>
+          <div class="rule-desc">Each buy above 0.1 SOL adds <strong>+1 second</strong> to the timer. Keep the bomb alive.</div>
+        </div>
+      </div>
+      <div class="rule-card sell">
+        <div class="rule-icon">📉</div>
+        <div>
+          <div class="rule-title">Sell &gt; 0.1 SOL</div>
+          <div class="rule-desc">Each sell above 0.1 SOL removes <strong>-1 second</strong> from the timer. Traitors die first.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE FEED -->
+    <div class="feed-wrap">
+      <div class="feed-header">
+        <div class="live-dot"></div>
+        <span>Live Transactions</span>
+      </div>
+      <div id="feed-list"></div>
+    </div>
+  </main>
+
+  <div class="footer-text">Contract: TBA &nbsp;·&nbsp; Dev wallet sells at 0 &nbsp;·&nbsp; Built on Solana</div>
+
+  <script>
+    // ── STATE ────────────────────────────────────────
+    const MAX_TIME = 60;
+    let timeLeft = MAX_TIME;
+    let running = true;
+    let totalBuys = 0;
+    let totalSells = 0;
+    let totalAdded = 0;
+    let totalRemoved = 0;
+    let consecutiveSells = 0;
+    let lastEventWasSell = false;
+
+    // ── DOM REFS ─────────────────────────────────────
+    const timerEl = document.getElementById('timer');
+    const progressFill = document.getElementById('progress-fill');
+    const pctLabel = document.getElementById('pct-label');
+    const feedList = document.getElementById('feed-list');
+    const flashEl = document.getElementById('flash');
+    const statBuys = document.getElementById('stat-buys');
+    const statSells = document.getElementById('stat-sells');
+    const statAdded = document.getElementById('stat-added');
+    const statRemoved = document.getElementById('stat-removed');
+    const detonation = document.getElementById('detonation');
+
+    // ── CANVAS BACKGROUND ────────────────────────────
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let W, H;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Grid + particles
+    function spawnParticle() {
+      const state = document.body.className;
+      let color = state.includes('green') ? '#00ff88' :
+                  state.includes('yellow') ? '#ffcc00' : '#ff2d2d';
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 2 + 0.5,
+        alpha: Math.random() * 0.5 + 0.1,
+        color,
+        life: 1
+      });
+    }
+
+    for (let i = 0; i < 80; i++) spawnParticle();
+
+    function drawGrid() {
+      const state = document.body.className;
+      const col = state.includes('green') ? 'rgba(0,255,136,0.04)' :
+                  state.includes('yellow') ? 'rgba(255,204,0,0.03)' :
+                  'rgba(255,45,45,0.04)';
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1;
+      const spacing = 60;
+      for (let x = 0; x < W; x += spacing) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += spacing) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+    }
+
+    function animateBg() {
+      ctx.clearRect(0, 0, W, H);
+      drawGrid();
+      if (particles.length < 80) spawnParticle();
+      particles = particles.filter(p => p.alpha > 0.02);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+      requestAnimationFrame(animateBg);
+    }
+    animateBg();
+
+    // ── BURST PARTICLES ON BUY ───────────────────────
+    function burst(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count;
+        const speed = Math.random() * 3 + 1;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 3 + 1,
+          alpha: 0.8,
+          color,
+          life: 1
+        });
+        // fade out burst particles faster
+        const last = particles[particles.length - 1];
+        const fade = () => { last.alpha -= 0.03; last.vx *= 0.95; last.vy *= 0.95; if (last.alpha > 0.02) requestAnimationFrame(fade); };
+        fade();
+      }
+    }
+
+    // ── COLOR STATE ──────────────────────────────────
+    function updateState() {
+      document.body.classList.remove('state-green', 'state-yellow', 'state-red');
+      if (consecutiveSells >= 2) {
+        document.body.classList.add('state-red');
+      } else if (timeLeft > 10) {
+        document.body.classList.add('state-green');
+      } else if (timeLeft > 5) {
+        document.body.classList.add('state-yellow');
+      } else {
+        document.body.classList.add('state-red');
+      }
+      particles.forEach(p => {
+        const state = document.body.className;
+        p.color = state.includes('green') ? '#00ff88' :
+                  state.includes('yellow') ? '#ffcc00' : '#ff2d2d';
+      });
+    }
+
+    // ── TIMER TICK ───────────────────────────────────
+    setInterval(() => {
+      if (!running) return;
+      timeLeft = Math.max(0, timeLeft - 1);
+      timerEl.textContent = timeLeft;
+      const pct = (timeLeft / MAX_TIME) * 100;
+      progressFill.style.width = pct + '%';
+      pctLabel.textContent = Math.round(pct) + '%';
+      updateState();
+      if (timeLeft === 0) detonate();
+    }, 1000);
+
+    // ── FLASH ────────────────────────────────────────
+    function flash(color) {
+      flashEl.style.background = color;
+      flashEl.style.opacity = '0.25';
+      setTimeout(() => { flashEl.style.opacity = '0'; }, 120);
+    }
+
+    // ── SHAKE ────────────────────────────────────────
+    function shake() {
+      document.body.classList.add('shaking');
+      setTimeout(() => document.body.classList.remove('shaking'), 400);
+    }
+
+    // ── ADD FEED ITEM ────────────────────────────────
+    function addFeed(type, addr, amount, delta) {
+      const item = document.createElement('div');
+      item.className = 'feed-item ' + type;
+      const sign = type === 'buy' ? '+' : '-';
+      const icon = type === 'buy' ? '▲' : '▼';
+      item.innerHTML = `
+        <div class="feed-left">
+          <span class="feed-type">${icon} ${type.toUpperCase()}</span>
+          <span class="feed-addr">${addr}</span>
+        </div>
+        <div class="feed-right">
+          <span class="feed-amount">${amount} SOL</span>
+          <span class="feed-delta">${sign}1s</span>
+        </div>
+      `;
+      feedList.insertBefore(item, feedList.firstChild);
+      if (feedList.children.length > 12) feedList.removeChild(feedList.lastChild);
+    }
+
+    // ── PROCESS BUY ──────────────────────────────────
+    function processBuy(amount, addr) {
+      if (!running) return;
+      if (amount >= 0.1) {
+        timeLeft = Math.min(timeLeft + 1, 999);
+        totalAdded++;
+        statAdded.textContent = '+' + totalAdded + 's';
+      }
+      totalBuys++;
+      statBuys.textContent = totalBuys;
+      consecutiveSells = 0;
+      flash('rgba(0,255,136,0.3)');
+      burst(W / 2, H / 2, '#00ff88');
+      addFeed('buy', addr, amount.toFixed(2), '+1');
+      updateState();
+      timerEl.textContent = timeLeft;
+    }
+
+    // ── PROCESS SELL ─────────────────────────────────
+    function processSell(amount, addr) {
+      if (!running) return;
+      if (amount >= 0.1) {
+        timeLeft = Math.max(0, timeLeft - 1);
+        totalRemoved++;
+        statRemoved.textContent = '-' + totalRemoved + 's';
+        consecutiveSells++;
+        shake();
+      }
+      totalSells++;
+      statSells.textContent = totalSells;
+      flash('rgba(255,45,45,0.4)');
+      addFeed('sell', addr, amount.toFixed(2), '-1');
+      updateState();
+      timerEl.textContent = timeLeft;
+      if (timeLeft === 0) detonate();
+    }
+
+    // ── DETONATE ─────────────────────────────────────
+    function detonate() {
+      running = false;
+      document.body.style.background = '#000';
+      detonation.classList.add('active');
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => flash('rgba(255,45,45,0.8)'), i * 120);
+      }
+    }
+
+    // ── DEMO SIMULATION ──────────────────────────────
+    // Remove this section and wire up real Solana tx listener
+    const wallets = ['7xKq…3fPa','9mRt…8vNc','3bYw…1kLm','5cZp…9nXr','2dQs…4jWt'];
+    function randomWallet() { return wallets[Math.floor(Math.random() * wallets.length)]; }
+
+    function simEvent() {
+      if (!running) return;
+      const isBuy = Math.random() > 0.38;
+      const amount = parseFloat((Math.random() * 0.8 + 0.05).toFixed(2));
+      if (isBuy) processBuy(amount, randomWallet());
+      else processSell(amount, randomWallet());
+      const next = Math.random() * 3000 + 1500;
+      setTimeout(simEvent, next);
+    }
+
+    setTimeout(simEvent, 2000);
+  </script>
+</body>
+</html>
