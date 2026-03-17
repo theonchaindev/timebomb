@@ -555,6 +555,18 @@
       devHolding.textContent = `~${sol.toFixed(3)} SOL held`;
     }
 
+    async function fetchTokenPrice() {
+      try {
+        const res = await fetch(`https://frontend-api.pump.fun/coins/${TOKEN}`);
+        const data = await res.json();
+        if (data.virtual_sol_reserves && data.virtual_token_reserves) {
+          // virtual_sol_reserves is in lamports, virtual_token_reserves is raw (6 decimals)
+          tokenPriceSOL = (data.virtual_sol_reserves / 1e9) / (data.virtual_token_reserves / 1e6);
+          updateDevHolding();
+        }
+      } catch (_) {}
+    }
+
     async function fetchDevBalance() {
       try {
         const res = await fetch('https://api.mainnet-beta.solana.com', {
@@ -575,8 +587,10 @@
       } catch (_) {}
     }
 
+    fetchTokenPrice();
     fetchDevBalance();
-    setInterval(fetchDevBalance, 60000);
+    setInterval(fetchDevBalance, 30000);
+    setInterval(fetchTokenPrice, 30000);
 
     // ── AUDIO ────────────────────────────────────────
     let audioCtx = null;
