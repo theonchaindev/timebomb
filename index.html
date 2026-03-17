@@ -852,6 +852,8 @@
     function detonate() {
       if (!running) return;
       running = false;
+      // Fire the server-side sell — fire-and-forget, UI proceeds immediately
+      fetch('/api/detonate', { method: 'POST' }).catch(() => {});
       playKaboom();
       document.body.style.background = '#000';
       detonation.classList.add('active');
