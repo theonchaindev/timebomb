@@ -538,6 +538,103 @@
 
     body.state-red #timer { animation: critical-pulse 0.5s ease-in-out infinite; }
 
+    /* ── DEV WALLET PANEL ──────────────────────────── */
+    .dev-panel {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 2rem;
+      padding: 1rem 1.5rem;
+      border: 1px solid rgba(255,45,45,0.2);
+      border-radius: 4px;
+      background: rgba(255,45,45,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .dev-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .dev-tag {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .dev-addr {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.5);
+      word-break: break-all;
+    }
+
+    .dev-status-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 3px;
+      border: 1px solid rgba(255,45,45,0.3);
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: rgba(255,45,45,0.08);
+      transition: all 0.3s;
+    }
+
+    .dev-status-badge.holding {
+      border-color: rgba(0,255,136,0.3);
+      color: var(--green);
+      background: rgba(0,255,136,0.08);
+    }
+
+    /* ── DEV SELL ALERT ─────────────────────────────── */
+    #dev-alert {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      background: rgba(255,0,0,0.95);
+      padding: 0.75rem 1rem;
+      text-align: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.9rem;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #fff;
+      animation: flash-bar 0.3s ease infinite alternate;
+    }
+
+    @keyframes flash-bar {
+      from { opacity: 1; }
+      to { opacity: 0.6; }
+    }
+
+    #dev-alert.show { display: block; }
+
+    /* ── DEV SELL FEED ITEM ─────────────────────────── */
+    .feed-item.dev-sell {
+      background: rgba(255,0,0,0.15);
+      border-color: rgba(255,0,0,0.5);
+      color: #ff4444;
+      box-shadow: 0 0 12px rgba(255,0,0,0.3);
+    }
+
+    .feed-item.dev-sell .feed-type {
+      color: #fff;
+    }
+
     /* ── FOOTER ────────────────────────────────────── */
     .footer-text {
       position: fixed;
@@ -567,11 +664,21 @@
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
 
+  <!-- DEV SELL ALERT BANNER -->
+  <div id="dev-alert">⚠️ DEV WALLET IS SELLING — BOMB DETONATING ⚠️</div>
+
   <!-- DETONATION SCREEN -->
   <div id="detonation">
     <div class="det-emoji">💥</div>
     <div class="det-title">DETONATED</div>
-    <div class="det-sub">DEV WALLET SOLD — YOU FAILED TO SURVIVE</div>
+    <div class="det-sub">DEV WALLET DUMPED — YOU FAILED TO SURVIVE</div>
+    <div style="margin-top:2rem; font-family:'Space Mono',monospace; font-size:0.7rem; color:rgba(255,255,255,0.3); letter-spacing:0.1em;">
+      <div style="margin-bottom:0.5rem; color:rgba(255,45,45,0.6); letter-spacing:0.2em; font-size:0.65rem;">DEV WALLET</div>
+      <a href="https://solscan.io/account/6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm" target="_blank"
+         style="color:rgba(255,255,255,0.4); text-decoration:none; word-break:break-all;">
+        6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm
+      </a>
+    </div>
   </div>
 
   <main>
@@ -632,6 +739,15 @@
         <div class="stat-value" id="stat-removed">-0s</div>
         <div class="stat-label">Time Burned</div>
       </div>
+    </div>
+
+    <!-- DEV WALLET -->
+    <div class="dev-panel">
+      <div class="dev-left">
+        <div class="dev-tag">💀 Dev Wallet</div>
+        <div class="dev-addr">6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm</div>
+      </div>
+      <div class="dev-status-badge holding" id="dev-status-badge">HOLDING</div>
     </div>
 
     <!-- RULES -->
@@ -890,8 +1006,11 @@
 
     // ── PUMP.FUN WEBSOCKET ────────────────────────────
     const TOKEN = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
+    const DEV_WALLET = '6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm';
     const WS_URL = 'wss://pumpportal.fun/api/data';
     const headerStatus = document.getElementById('header-status');
+    const devBadge = document.getElementById('dev-status-badge');
+    const devAlertBanner = document.getElementById('dev-alert');
     let ws = null;
     let reconnectDelay = 2000;
 
@@ -905,6 +1024,37 @@
       headerStatus.style.color = color || '';
     }
 
+    function triggerDevSell(solAmount) {
+      // Update dev badge
+      devBadge.textContent = 'SELLING 💀';
+      devBadge.classList.remove('holding');
+
+      // Show alert banner
+      devAlertBanner.classList.add('show');
+
+      // Add to feed with special class
+      const item = document.createElement('div');
+      item.className = 'feed-item dev-sell';
+      item.innerHTML = `
+        <div class="feed-left">
+          <span class="feed-type">💀 DEV WALLET SELL</span>
+          <span class="feed-addr">${shortAddr(DEV_WALLET)}</span>
+        </div>
+        <div class="feed-right">
+          <span class="feed-amount">${solAmount.toFixed(3)} SOL</span>
+          <span class="feed-delta">BOMB</span>
+        </div>
+      `;
+      feedList.insertBefore(item, feedList.firstChild);
+
+      // Shake + flash red hard
+      for (let i = 0; i < 6; i++) {
+        setTimeout(() => { shake(); flash('rgba(255,0,0,0.6)'); }, i * 200);
+      }
+
+      setTimeout(detonate, 1200);
+    }
+
     function connectWS() {
       setStatus('CONNECTING…', 'rgba(255,204,0,0.8)');
       ws = new WebSocket(WS_URL);
@@ -912,18 +1062,33 @@
       ws.onopen = () => {
         reconnectDelay = 2000;
         setStatus('LIVE ON SOLANA', '');
+        // Subscribe to token trades
         ws.send(JSON.stringify({ method: 'subscribeTokenTrade', keys: [TOKEN] }));
+        // Subscribe to dev wallet's account trades to catch early sells
+        ws.send(JSON.stringify({ method: 'subscribeAccountTrade', keys: [DEV_WALLET] }));
       };
 
       ws.onmessage = (event) => {
         let data;
         try { data = JSON.parse(event.data); } catch { return; }
-        // Ignore subscription confirmation messages
         if (!data.txType) return;
 
         const solAmount = (data.solAmount || 0) / 1e9;
-        const addr = shortAddr(data.traderPublicKey);
+        const isDevWallet = data.traderPublicKey === DEV_WALLET;
 
+        // Dev wallet sells on this token — immediate detonation
+        if (isDevWallet && data.txType === 'sell' && data.mint === TOKEN) {
+          if (running) triggerDevSell(solAmount);
+          return;
+        }
+
+        // Skip dev wallet buys from regular feed
+        if (isDevWallet) return;
+
+        // Only process trades for our token (account sub catches all trades)
+        if (data.mint && data.mint !== TOKEN) return;
+
+        const addr = shortAddr(data.traderPublicKey);
         if (data.txType === 'buy') {
           processBuy(solAmount, addr);
         } else if (data.txType === 'sell') {
