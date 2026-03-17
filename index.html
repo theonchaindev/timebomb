@@ -1007,7 +1007,7 @@
         try { data = JSON.parse(event.data); } catch { return; }
         if (!data.txType || !data.signature) return;
 
-        const solAmount = (data.solAmount || 0) / 1e9;
+        const solAmount = data.solAmount || 0;
         const isDevWallet = data.traderPublicKey === DEV_WALLET;
 
         // Dev wallet sells this token → immediate local detonation (no need to wait for API)
