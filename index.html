@@ -58,10 +58,14 @@
       color: var(--muted);
     }
 
-    /* ── LIVE PILL (moved inline under logo) ────────── */
+    /* ── PILLS ROW ──────────────────────────────────── */
+    .pills-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.6rem; margin-top: 0.7rem; flex-wrap: wrap;
+    }
+
     .live-pill {
       display: inline-flex; align-items: center; gap: 0.45rem;
-      margin-top: 0.6rem;
       background: rgba(255,26,26,0.12);
       border: 1px solid rgba(255,26,26,0.35);
       border-radius: 2px;
@@ -70,9 +74,62 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--red);
+      text-decoration: none;
     }
     body.state-green .live-pill { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.3); color: var(--green); }
     body.state-yellow .live-pill { background: rgba(255,204,0,0.1); border-color: rgba(255,204,0,0.3); color: var(--yellow); }
+
+    .x-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 2px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .x-pill:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+    .x-pill svg { width: 10px; height: 10px; fill: currentColor; flex-shrink: 0; }
+
+    /* ── CA BAR ─────────────────────────────────────── */
+    .ca-bar {
+      width: 100%; max-width: 680px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: #000;
+      border: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      user-select: none;
+    }
+    .ca-bar:hover { border-color: rgba(255,255,255,0.25); }
+    .ca-bar:active { border-color: var(--green); }
+
+    .ca-label {
+      font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.2rem;
+    }
+    .ca-addr {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(0.52rem, 1.8vw, 0.68rem);
+      color: #fff; letter-spacing: 0.02em;
+      word-break: break-all; line-height: 1.4;
+    }
+    .ca-copy {
+      font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); white-space: nowrap; flex-shrink: 0;
+      border: 1px solid var(--border); padding: 0.25rem 0.6rem; border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .ca-bar:hover .ca-copy { color: #fff; border-color: rgba(255,255,255,0.3); }
+    .ca-bar.copied .ca-copy { color: var(--green); border-color: var(--green); }
+    .ca-bar.copied .ca-addr { color: var(--green); }
 
     .live-dot {
       width: 6px; height: 6px;
@@ -359,10 +416,25 @@
     <div class="title-wrap">
       <img src="/boom-tp.png" alt="BOOM" class="title-logo" />
       <div class="subtitle">Buy to survive · Sell to detonate</div>
-      <div class="live-pill">
-        <div class="live-dot"></div>
-        <span>Live on Solana</span>
+      <div class="pills-row">
+        <div class="live-pill">
+          <div class="live-dot"></div>
+          <span>Live on Solana</span>
+        </div>
+        <a class="x-pill" href="https://x.com/experimentboom" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          @experimentboom
+        </a>
       </div>
+    </div>
+
+    <!-- CA -->
+    <div class="ca-bar" id="ca-bar" onclick="copyCA()">
+      <div>
+        <div class="ca-label">Contract Address</div>
+        <div class="ca-addr" id="ca-addr">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump</div>
+      </div>
+      <div class="ca-copy" id="ca-copy">Copy</div>
     </div>
 
     <!-- TIMER -->
@@ -425,6 +497,20 @@
   <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump · Built on Solana</div>
 
   <script>
+    function copyCA() {
+      const ca = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
+      navigator.clipboard.writeText(ca).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = ca; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      });
+      const bar = document.getElementById('ca-bar');
+      const lbl = document.getElementById('ca-copy');
+      bar.classList.add('copied');
+      lbl.textContent = 'Copied!';
+      setTimeout(() => { bar.classList.remove('copied'); lbl.textContent = 'Copy'; }, 2000);
+    }
+
     const TOKEN      = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
     const DEV_WALLET = '6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm';
     const WS_URL     = 'wss://pumpportal.fun/api/data';
