@@ -791,6 +791,7 @@
     let detonatesAt = Date.now() + BASE_TIME * 1000;
     let running = true;
     let consecutiveSells = 0;
+    let serverSynced = false; // don't allow detonate() until first poll succeeds
 
     // ── DOM REFS ─────────────────────────────────────
     const timerEl = document.getElementById('timer');
@@ -887,7 +888,7 @@
       progressFill.style.width = pct + '%';
       pctLabel.textContent = Math.round(pct) + '%';
       updateColorState(timeLeft);
-      if (timeLeft <= 0) detonate();
+      if (timeLeft <= 0 && serverSynced) detonate();
     }, 100);
 
     // ── FLASH / SHAKE ────────────────────────────────
@@ -943,6 +944,7 @@
     function syncState(state) {
       if (!state || !state.detonatesAt) return;
       detonatesAt = Number(state.detonatesAt);
+      serverSynced = true;
       statBuys.textContent = state.totalBuys || 0;
       statSells.textContent = state.totalSells || 0;
       statAdded.textContent = '+' + (state.totalAdded || 0) + 's';
