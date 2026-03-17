@@ -662,7 +662,7 @@
     </div>
   </main>
 
-  <div class="footer-text">Contract: TBA &nbsp;·&nbsp; Dev wallet sells at 0 &nbsp;·&nbsp; Built on Solana</div>
+  <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump &nbsp;·&nbsp; Dev wallet sells at 0 &nbsp;·&nbsp; Built on Solana</div>
 
   <script>
     // ── STATE ────────────────────────────────────────
@@ -888,22 +888,60 @@
       }
     }
 
-    // ── DEMO SIMULATION ──────────────────────────────
-    // Remove this section and wire up real Solana tx listener
-    const wallets = ['7xKq…3fPa','9mRt…8vNc','3bYw…1kLm','5cZp…9nXr','2dQs…4jWt'];
-    function randomWallet() { return wallets[Math.floor(Math.random() * wallets.length)]; }
+    // ── PUMP.FUN WEBSOCKET ────────────────────────────
+    const TOKEN = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
+    const WS_URL = 'wss://pumpportal.fun/api/data';
+    const headerStatus = document.getElementById('header-status');
+    let ws = null;
+    let reconnectDelay = 2000;
 
-    function simEvent() {
-      if (!running) return;
-      const isBuy = Math.random() > 0.38;
-      const amount = parseFloat((Math.random() * 0.8 + 0.05).toFixed(2));
-      if (isBuy) processBuy(amount, randomWallet());
-      else processSell(amount, randomWallet());
-      const next = Math.random() * 3000 + 1500;
-      setTimeout(simEvent, next);
+    function shortAddr(addr) {
+      if (!addr) return '???';
+      return addr.slice(0, 4) + '…' + addr.slice(-4);
     }
 
-    setTimeout(simEvent, 2000);
+    function setStatus(text, color) {
+      headerStatus.textContent = text;
+      headerStatus.style.color = color || '';
+    }
+
+    function connectWS() {
+      setStatus('CONNECTING…', 'rgba(255,204,0,0.8)');
+      ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        reconnectDelay = 2000;
+        setStatus('LIVE ON SOLANA', '');
+        ws.send(JSON.stringify({ method: 'subscribeTokenTrade', keys: [TOKEN] }));
+      };
+
+      ws.onmessage = (event) => {
+        let data;
+        try { data = JSON.parse(event.data); } catch { return; }
+        // Ignore subscription confirmation messages
+        if (!data.txType) return;
+
+        const solAmount = (data.solAmount || 0) / 1e9;
+        const addr = shortAddr(data.traderPublicKey);
+
+        if (data.txType === 'buy') {
+          processBuy(solAmount, addr);
+        } else if (data.txType === 'sell') {
+          processSell(solAmount, addr);
+        }
+      };
+
+      ws.onerror = () => setStatus('ERROR — RETRYING…', 'rgba(255,45,45,0.8)');
+
+      ws.onclose = () => {
+        if (!running) return;
+        setStatus('RECONNECTING…', 'rgba(255,204,0,0.8)');
+        setTimeout(connectWS, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 1.5, 15000);
+      };
+    }
+
+    connectWS();
   </script>
 </body>
 </html>
