@@ -446,7 +446,7 @@
     <div class="ca-bar" id="ca-bar" onclick="copyCA()">
       <div>
         <div class="ca-label">Contract Address</div>
-        <div class="ca-addr" id="ca-addr">6c8Hi9DYc4zznGyN5hMYwuq6QpFC74SpChxJisXWpump</div>
+        <div class="ca-addr" id="ca-addr">A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump</div>
       </div>
       <div class="ca-copy" id="ca-copy">Copy</div>
     </div>
@@ -509,11 +509,11 @@
     </div>
   </main>
 
-  <div class="footer-text">6c8Hi9DYc4zznGyN5hMYwuq6QpFC74SpChxJisXWpump · Built on Solana</div>
+  <div class="footer-text">A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump · Built on Solana</div>
 
   <script>
     function copyCA() {
-      const ca = '6c8Hi9DYc4zznGyN5hMYwuq6QpFC74SpChxJisXWpump';
+      const ca = 'A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump';
       navigator.clipboard.writeText(ca).catch(() => {
         const ta = document.createElement('textarea');
         ta.value = ca; document.body.appendChild(ta); ta.select();
@@ -526,7 +526,7 @@
       setTimeout(() => { bar.classList.remove('copied'); lbl.textContent = 'Copy'; }, 2000);
     }
 
-    const TOKEN      = '6c8Hi9DYc4zznGyN5hMYwuq6QpFC74SpChxJisXWpump';
+    const TOKEN      = 'A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump';
     const DEV_WALLET = 'BoMbKxggGksUH19WPUXcrJkJDRd7RnQZM2qZihNNTo9Y';
     const WS_URL     = 'wss://pumpportal.fun/api/data';
     const BASE_TIME  = 600;
