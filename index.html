@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TIME BOMB — Tick or Die</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BOOM — Tick or Die</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -19,7 +19,6 @@
       --muted: rgba(255,255,255,0.4);
       --timer-color: #ff2d2d;
       --timer-glow: rgba(255,45,45,0.8);
-      --bg-overlay: rgba(255,45,45,0.03);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,6 +29,7 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
       transition: background 0.5s ease;
     }
@@ -61,8 +61,8 @@
         0deg,
         transparent,
         transparent 2px,
-        rgba(0,0,0,0.08) 2px,
-        rgba(0,0,0,0.08) 4px
+        rgba(0,0,0,0.06) 2px,
+        rgba(0,0,0,0.06) 4px
       );
       pointer-events: none;
       z-index: 1000;
@@ -76,39 +76,40 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      padding: 2rem 1rem 4rem;
+      min-height: 100dvh;
+      padding: 0 1rem 5rem;
     }
 
     /* ── HEADER ────────────────────────────────────── */
     header {
       width: 100%;
-      max-width: 900px;
+      max-width: 700px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.5rem 0;
+      padding: 1rem 0;
       border-bottom: 1px solid rgba(255,255,255,0.06);
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
     }
 
-    .logo {
-      font-family: 'Orbitron', monospace;
-      font-size: 1.1rem;
-      font-weight: 900;
-      letter-spacing: 0.15em;
-      color: var(--timer-color);
-      text-shadow: 0 0 20px var(--timer-glow);
-      text-transform: uppercase;
-      transition: color 0.5s, text-shadow 0.5s;
+    .logo-img {
+      height: 44px;
+      width: auto;
+      filter: drop-shadow(0 0 12px rgba(255,45,45,0.7));
+      transition: filter 0.5s;
     }
+
+    body.state-green .logo-img  { filter: drop-shadow(0 0 12px rgba(0,255,136,0.7)) hue-rotate(120deg); }
+    body.state-yellow .logo-img { filter: drop-shadow(0 0 12px rgba(255,204,0,0.7)) hue-rotate(20deg) saturate(1.5); }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
-      font-size: 0.8rem;
+      gap: 0.6rem;
+      font-size: 0.72rem;
       color: var(--muted);
       font-family: 'Space Mono', monospace;
+      letter-spacing: 0.08em;
     }
 
     .live-dot {
@@ -119,6 +120,7 @@
       box-shadow: 0 0 8px var(--timer-glow);
       animation: pulse-dot 1s ease-in-out infinite;
       transition: background 0.5s, box-shadow 0.5s;
+      flex-shrink: 0;
     }
 
     @keyframes pulse-dot {
@@ -126,45 +128,35 @@
       50% { transform: scale(1.5); opacity: 0.5; }
     }
 
-    /* ── BOMB SVG / ICON ───────────────────────────── */
-    .bomb-icon {
-      font-size: 3.5rem;
-      animation: bob 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px var(--timer-glow));
-      transition: filter 0.5s;
-      margin-bottom: 0.5rem;
-    }
-
-    @keyframes bob {
-      0%, 100% { transform: translateY(0) rotate(-3deg); }
-      50% { transform: translateY(-8px) rotate(3deg); }
-    }
-
-    /* ── TITLE ─────────────────────────────────────── */
+    /* ── LOGO / TITLE AREA ─────────────────────────── */
     .title-wrap {
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
     }
 
-    h1 {
-      font-family: 'Orbitron', monospace;
-      font-size: clamp(3rem, 10vw, 7rem);
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--timer-color);
-      text-shadow:
-        0 0 40px var(--timer-glow),
-        0 0 80px var(--timer-glow),
-        0 0 120px rgba(255,45,45,0.3);
-      transition: color 0.5s, text-shadow 0.5s;
-      line-height: 1;
+    .title-logo {
+      width: min(280px, 65vw);
+      height: auto;
+      filter: drop-shadow(0 0 30px rgba(255,45,45,0.6)) drop-shadow(0 0 60px rgba(255,45,45,0.3));
+      animation: bob 3s ease-in-out infinite;
+      transition: filter 0.5s;
+    }
+
+    body.state-green  .title-logo { filter: drop-shadow(0 0 30px rgba(0,255,136,0.5)) drop-shadow(0 0 60px rgba(0,255,136,0.25)) hue-rotate(120deg); }
+    body.state-yellow .title-logo { filter: drop-shadow(0 0 30px rgba(255,204,0,0.5)) drop-shadow(0 0 60px rgba(255,204,0,0.25)) hue-rotate(20deg) saturate(1.5); }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50%       { transform: translateY(-8px) rotate(2deg); }
     }
 
     .subtitle {
-      margin-top: 0.75rem;
-      font-size: 0.9rem;
-      letter-spacing: 0.3em;
+      font-size: clamp(0.65rem, 2.5vw, 0.85rem);
+      letter-spacing: 0.25em;
       text-transform: uppercase;
       color: var(--muted);
       font-family: 'Space Mono', monospace;
@@ -173,21 +165,24 @@
     /* ── TIMER DISPLAY ─────────────────────────────── */
     .timer-container {
       position: relative;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 500px;
     }
 
     .timer-outer {
       position: relative;
-      padding: 2.5rem 4rem;
+      padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1.5rem, 6vw, 4rem);
       border: 2px solid var(--timer-color);
       border-radius: 4px;
       background: rgba(0,0,0,0.7);
       box-shadow:
         0 0 0 1px rgba(255,45,45,0.1),
         0 0 40px var(--timer-glow),
-        0 0 80px rgba(255,45,45,0.15),
+        0 0 80px rgba(255,45,45,0.12),
         inset 0 0 40px rgba(0,0,0,0.8);
       transition: border-color 0.5s, box-shadow 0.5s;
+      text-align: center;
     }
 
     .timer-corner {
@@ -211,18 +206,19 @@
       background: var(--bg);
       padding: 0 0.75rem;
       font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.25em;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
       color: var(--timer-color);
       text-transform: uppercase;
       transition: color 0.5s;
+      white-space: nowrap;
     }
 
     #timer {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(5rem, 18vw, 12rem);
+      font-size: clamp(4.5rem, 22vw, 10rem);
       font-weight: 900;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       color: var(--timer-color);
       text-shadow:
         0 0 20px var(--timer-glow),
@@ -237,9 +233,9 @@
 
     .timer-sub {
       text-align: center;
-      margin-top: 0.75rem;
+      margin-top: 0.6rem;
       font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
+      font-size: clamp(0.55rem, 2vw, 0.7rem);
       letter-spacing: 0.2em;
       color: rgba(255,255,255,0.2);
       text-transform: uppercase;
@@ -248,17 +244,17 @@
     /* ── PROGRESS BAR ──────────────────────────────── */
     .progress-wrap {
       width: 100%;
-      max-width: 600px;
-      margin-bottom: 3rem;
+      max-width: 500px;
+      margin-bottom: 2rem;
     }
 
     .progress-labels {
       display: flex;
       justify-content: space-between;
       font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--muted);
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       margin-bottom: 0.5rem;
     }
 
@@ -268,7 +264,6 @@
       background: rgba(255,255,255,0.06);
       border-radius: 3px;
       overflow: hidden;
-      position: relative;
     }
 
     #progress-fill {
@@ -281,30 +276,26 @@
 
     /* ── STATS ROW ─────────────────────────────────── */
     .stats-row {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 2rem;
     }
 
     .stat-card {
-      padding: 1.2rem 2rem;
+      padding: 0.9rem 0.5rem;
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 4px;
       background: rgba(255,255,255,0.02);
       text-align: center;
-      min-width: 130px;
       transition: border-color 0.5s, background 0.5s;
-    }
-
-    .stat-card:hover {
-      background: rgba(255,255,255,0.04);
     }
 
     .stat-value {
       font-family: 'Orbitron', monospace;
-      font-size: 1.5rem;
+      font-size: clamp(1rem, 4vw, 1.4rem);
       font-weight: 700;
       color: var(--timer-color);
       text-shadow: 0 0 12px var(--timer-glow);
@@ -312,8 +303,8 @@
     }
 
     .stat-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
+      font-size: clamp(0.55rem, 2vw, 0.65rem);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
       margin-top: 0.25rem;
@@ -323,69 +314,113 @@
     /* ── RULES ─────────────────────────────────────── */
     .rules-wrap {
       width: 100%;
-      max-width: 600px;
-      margin-bottom: 3rem;
+      max-width: 500px;
+      margin-bottom: 2rem;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .rule-card {
-      padding: 1.25rem 1.5rem;
+      padding: 1rem 1.1rem;
       border-radius: 4px;
       border: 1px solid;
       display: flex;
       align-items: flex-start;
-      gap: 0.75rem;
+      gap: 0.65rem;
     }
 
-    .rule-card.buy {
-      border-color: rgba(0,255,136,0.2);
-      background: rgba(0,255,136,0.04);
-    }
+    .rule-card.buy  { border-color: rgba(0,255,136,0.2); background: rgba(0,255,136,0.04); }
+    .rule-card.sell { border-color: rgba(255,45,45,0.2);  background: rgba(255,45,45,0.04); }
 
-    .rule-card.sell {
-      border-color: rgba(255,45,45,0.2);
-      background: rgba(255,45,45,0.04);
-    }
-
-    .rule-icon {
-      font-size: 1.4rem;
-      flex-shrink: 0;
-      margin-top: 0.1rem;
-    }
+    .rule-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.1rem; }
 
     .rule-title {
       font-family: 'Orbitron', monospace;
-      font-size: 0.75rem;
+      font-size: clamp(0.6rem, 2.2vw, 0.72rem);
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       margin-bottom: 0.3rem;
     }
 
-    .rule-card.buy .rule-title { color: var(--green); }
+    .rule-card.buy  .rule-title { color: var(--green); }
     .rule-card.sell .rule-title { color: var(--accent); }
 
     .rule-desc {
-      font-size: 0.8rem;
+      font-size: clamp(0.68rem, 2.5vw, 0.78rem);
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.45;
+    }
+
+    /* ── DEV WALLET PANEL ──────────────────────────── */
+    .dev-panel {
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 2rem;
+      padding: 0.9rem 1.2rem;
+      border: 1px solid rgba(255,45,45,0.2);
+      border-radius: 4px;
+      background: rgba(255,45,45,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .dev-left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+
+    .dev-tag {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .dev-addr {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(0.55rem, 2vw, 0.68rem);
+      color: rgba(255,255,255,0.45);
+      word-break: break-all;
+    }
+
+    .dev-status-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 3px;
+      border: 1px solid rgba(255,45,45,0.3);
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: rgba(255,45,45,0.08);
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .dev-status-badge.holding {
+      border-color: rgba(0,255,136,0.3);
+      color: var(--green);
+      background: rgba(0,255,136,0.08);
     }
 
     /* ── LIVE FEED ─────────────────────────────────── */
     .feed-wrap {
       width: 100%;
-      max-width: 600px;
+      max-width: 500px;
     }
 
     .feed-header {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--muted);
@@ -395,7 +430,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
-      max-height: 280px;
+      max-height: 260px;
       overflow: hidden;
       position: relative;
     }
@@ -403,10 +438,8 @@
     #feed-list::after {
       content: '';
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
+      bottom: 0; left: 0; right: 0;
+      height: 70px;
       background: linear-gradient(transparent, var(--bg));
       pointer-events: none;
     }
@@ -415,37 +448,57 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.6rem 1rem;
+      padding: 0.55rem 0.9rem;
       border-radius: 3px;
       font-family: 'Space Mono', monospace;
-      font-size: 0.72rem;
+      font-size: clamp(0.6rem, 2.5vw, 0.72rem);
       animation: slide-in 0.3s ease forwards;
       border: 1px solid transparent;
     }
 
     @keyframes slide-in {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .feed-item.buy {
-      background: rgba(0,255,136,0.06);
-      border-color: rgba(0,255,136,0.12);
-      color: var(--green);
-    }
+    .feed-item.buy  { background: rgba(0,255,136,0.06); border-color: rgba(0,255,136,0.12); color: var(--green); }
+    .feed-item.sell { background: rgba(255,45,45,0.06);  border-color: rgba(255,45,45,0.12);  color: var(--accent); }
 
-    .feed-item.sell {
-      background: rgba(255,45,45,0.06);
-      border-color: rgba(255,45,45,0.12);
-      color: var(--accent);
-    }
+    .feed-left  { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+    .feed-type  { font-weight: 700; letter-spacing: 0.05em; white-space: nowrap; }
+    .feed-addr  { color: rgba(255,255,255,0.3); font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; margin-left: 0.5rem; }
+    .feed-amount { font-weight: 700; white-space: nowrap; }
+    .feed-delta  { font-size: 0.6rem; opacity: 0.7; white-space: nowrap; }
 
-    .feed-left { display: flex; align-items: center; gap: 0.5rem; }
-    .feed-type { font-weight: 700; letter-spacing: 0.05em; }
-    .feed-addr { color: rgba(255,255,255,0.3); font-size: 0.65rem; }
-    .feed-right { display: flex; align-items: center; gap: 1rem; }
-    .feed-amount { font-weight: 700; }
-    .feed-delta { font-size: 0.65rem; opacity: 0.7; }
+    /* ── DEV SELL FEED ITEM ─────────────────────────── */
+    .feed-item.dev-sell {
+      background: rgba(255,0,0,0.15);
+      border-color: rgba(255,0,0,0.5);
+      color: #ff4444;
+      box-shadow: 0 0 12px rgba(255,0,0,0.3);
+    }
+    .feed-item.dev-sell .feed-type { color: #fff; }
+
+    /* ── DEV SELL ALERT ─────────────────────────────── */
+    #dev-alert {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      background: rgba(255,0,0,0.95);
+      padding: 0.75rem 1rem;
+      text-align: center;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(0.65rem, 3vw, 0.9rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #fff;
+      animation: flash-bar 0.3s ease infinite alternate;
+    }
+    @keyframes flash-bar { from { opacity: 1; } to { opacity: 0.6; } }
+    #dev-alert.show { display: block; }
 
     /* ── DETONATION SCREEN ─────────────────────────── */
     #detonation {
@@ -458,65 +511,71 @@
       align-items: center;
       justify-content: center;
       text-align: center;
+      padding: 2rem;
     }
-
     #detonation.active { display: flex; }
 
-    .det-emoji { font-size: 8rem; animation: explode 0.5s ease forwards; }
+    .det-logo {
+      width: min(240px, 60vw);
+      height: auto;
+      animation: explode 0.5s ease forwards;
+      filter: drop-shadow(0 0 40px rgba(255,45,45,0.8));
+    }
+
     @keyframes explode {
-      0% { transform: scale(0.5); opacity: 0; }
-      60% { transform: scale(1.3); }
-      100% { transform: scale(1); opacity: 1; }
+      0%   { transform: scale(0.5); opacity: 0; }
+      60%  { transform: scale(1.2); }
+      100% { transform: scale(1);   opacity: 1; }
     }
 
     .det-title {
       font-family: 'Orbitron', monospace;
-      font-size: clamp(3rem, 10vw, 6rem);
+      font-size: clamp(2.5rem, 10vw, 5rem);
       font-weight: 900;
       color: var(--accent);
       text-shadow: 0 0 60px var(--accent-glow);
-      margin: 1rem 0;
+      margin: 1rem 0 0.5rem;
       animation: glitch-text 0.1s infinite alternate;
     }
 
     @keyframes glitch-text {
-      0% { clip-path: inset(0 0 0 0); transform: translate(0); }
-      20% { clip-path: inset(20% 0 30% 0); transform: translate(-3px, 2px); }
-      40% { clip-path: inset(50% 0 10% 0); transform: translate(3px, -2px); }
-      60% { clip-path: inset(10% 0 50% 0); transform: translate(-2px, 3px); }
-      80% { clip-path: inset(30% 0 20% 0); transform: translate(2px, -3px); }
+      0%   { clip-path: inset(0 0 0 0); transform: translate(0); }
+      20%  { clip-path: inset(20% 0 30% 0); transform: translate(-3px, 2px); }
+      40%  { clip-path: inset(50% 0 10% 0); transform: translate(3px, -2px); }
+      60%  { clip-path: inset(10% 0 50% 0); transform: translate(-2px, 3px); }
+      80%  { clip-path: inset(30% 0 20% 0); transform: translate(2px, -3px); }
       100% { clip-path: inset(0 0 0 0); transform: translate(0); }
     }
 
     .det-sub {
       font-family: 'Space Mono', monospace;
-      font-size: 1rem;
+      font-size: clamp(0.65rem, 3vw, 0.9rem);
       color: var(--muted);
-      letter-spacing: 0.2em;
+      letter-spacing: 0.15em;
+      margin-bottom: 1.5rem;
+    }
+
+    .det-wallet {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(0.5rem, 2vw, 0.65rem);
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 0.08em;
+    }
+
+    .det-wallet a {
+      color: rgba(255,255,255,0.35);
+      text-decoration: none;
+      word-break: break-all;
     }
 
     /* ── COLOR STATES ──────────────────────────────── */
-    body.state-green {
-      --timer-color: var(--green);
-      --timer-glow: var(--green-glow);
-      --bg-overlay: rgba(0,255,136,0.04);
-    }
-
-    body.state-yellow {
-      --timer-color: var(--yellow);
-      --timer-glow: var(--yellow-glow);
-      --bg-overlay: rgba(255,204,0,0.03);
-    }
-
-    body.state-red {
-      --timer-color: var(--accent);
-      --timer-glow: var(--accent-glow);
-      --bg-overlay: rgba(255,45,45,0.04);
-    }
+    body.state-green  { --timer-color: var(--green);  --timer-glow: var(--green-glow); }
+    body.state-yellow { --timer-color: var(--yellow); --timer-glow: var(--yellow-glow); }
+    body.state-red    { --timer-color: var(--accent); --timer-glow: var(--accent-glow); }
 
     /* ── SHAKE ─────────────────────────────────────── */
     @keyframes shake {
-      0%, 100% { transform: translate(0,0) rotate(0); }
+      0%,100% { transform: translate(0,0) rotate(0); }
       10% { transform: translate(-4px, 2px) rotate(-0.5deg); }
       20% { transform: translate(4px, -2px) rotate(0.5deg); }
       30% { transform: translate(-6px, 3px) rotate(-1deg); }
@@ -527,135 +586,54 @@
       80% { transform: translate(5px, -2px) rotate(0.5deg); }
       90% { transform: translate(-2px, 3px) rotate(0); }
     }
-
     body.shaking main { animation: shake 0.4s ease; }
 
     /* ── CRITICAL PULSE ────────────────────────────── */
     @keyframes critical-pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+      50%       { opacity: 0.4; }
     }
-
     body.state-red #timer { animation: critical-pulse 0.5s ease-in-out infinite; }
-
-    /* ── DEV WALLET PANEL ──────────────────────────── */
-    .dev-panel {
-      width: 100%;
-      max-width: 600px;
-      margin-bottom: 2rem;
-      padding: 1rem 1.5rem;
-      border: 1px solid rgba(255,45,45,0.2);
-      border-radius: 4px;
-      background: rgba(255,45,45,0.04);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .dev-left {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .dev-tag {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .dev-addr {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.5);
-      word-break: break-all;
-    }
-
-    .dev-status-badge {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      padding: 0.3rem 0.75rem;
-      border-radius: 3px;
-      border: 1px solid rgba(255,45,45,0.3);
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      background: rgba(255,45,45,0.08);
-      transition: all 0.3s;
-    }
-
-    .dev-status-badge.holding {
-      border-color: rgba(0,255,136,0.3);
-      color: var(--green);
-      background: rgba(0,255,136,0.08);
-    }
-
-    /* ── DEV SELL ALERT ─────────────────────────────── */
-    #dev-alert {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 500;
-      background: rgba(255,0,0,0.95);
-      padding: 0.75rem 1rem;
-      text-align: center;
-      font-family: 'Orbitron', monospace;
-      font-size: 0.9rem;
-      font-weight: 900;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #fff;
-      animation: flash-bar 0.3s ease infinite alternate;
-    }
-
-    @keyframes flash-bar {
-      from { opacity: 1; }
-      to { opacity: 0.6; }
-    }
-
-    #dev-alert.show { display: block; }
-
-    /* ── DEV SELL FEED ITEM ─────────────────────────── */
-    .feed-item.dev-sell {
-      background: rgba(255,0,0,0.15);
-      border-color: rgba(255,0,0,0.5);
-      color: #ff4444;
-      box-shadow: 0 0 12px rgba(255,0,0,0.3);
-    }
-
-    .feed-item.dev-sell .feed-type {
-      color: #fff;
-    }
 
     /* ── FOOTER ────────────────────────────────────── */
     .footer-text {
       position: fixed;
-      bottom: 1.5rem;
+      bottom: env(safe-area-inset-bottom, 1rem);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Space Mono', monospace;
-      font-size: 0.65rem;
-      color: rgba(255,255,255,0.12);
-      letter-spacing: 0.2em;
+      font-size: 0.55rem;
+      color: rgba(255,255,255,0.1);
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       white-space: nowrap;
       z-index: 1;
+      text-align: center;
     }
 
-    /* ── RESPONSIVE ────────────────────────────────── */
-    @media (max-width: 600px) {
-      .timer-outer { padding: 1.5rem 2rem; }
+    /* ── MOBILE ────────────────────────────────────── */
+    @media (max-width: 480px) {
+      main { padding: 0 0.85rem 5rem; }
+
+      header { padding: 0.85rem 0; margin-bottom: 1.5rem; }
+      .logo-img { height: 36px; }
+      .header-right span { display: none; }
+
+      .title-logo { width: min(220px, 72vw); }
+
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+
       .rules-wrap { grid-template-columns: 1fr; }
-      .stats-row { gap: 1rem; }
-      .stat-card { min-width: 100px; padding: 1rem 1.25rem; }
+
+      .dev-addr { font-size: 0.52rem; }
+
+      .footer-text { font-size: 0.48rem; letter-spacing: 0.06em; }
+    }
+
+    @media (max-width: 360px) {
+      .title-logo { width: 180px; }
+      .logo-img { height: 30px; }
     }
   </style>
 </head>
@@ -669,13 +647,12 @@
 
   <!-- DETONATION SCREEN -->
   <div id="detonation">
-    <div class="det-emoji">💥</div>
+    <img src="/boom-tp.png" alt="BOOM" class="det-logo" />
     <div class="det-title">DETONATED</div>
     <div class="det-sub">DEV WALLET DUMPED — YOU FAILED TO SURVIVE</div>
-    <div style="margin-top:2rem; font-family:'Space Mono',monospace; font-size:0.7rem; color:rgba(255,255,255,0.3); letter-spacing:0.1em;">
-      <div style="margin-bottom:0.5rem; color:rgba(255,45,45,0.6); letter-spacing:0.2em; font-size:0.65rem;">DEV WALLET</div>
-      <a href="https://solscan.io/account/6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm" target="_blank"
-         style="color:rgba(255,255,255,0.4); text-decoration:none; word-break:break-all;">
+    <div class="det-wallet">
+      <div style="color:rgba(255,45,45,0.5); letter-spacing:0.15em; font-size:0.6rem; margin-bottom:0.4rem;">DEV WALLET</div>
+      <a href="https://solscan.io/account/6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm" target="_blank">
         6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm
       </a>
     </div>
@@ -683,16 +660,16 @@
 
   <main>
     <header>
-      <div class="logo">💣 TIME BOMB</div>
+      <img src="/boom-tp.png" alt="BOOM" class="logo-img" />
       <div class="header-right">
         <div class="live-dot"></div>
         <span id="header-status">LIVE ON SOLANA</span>
       </div>
     </header>
 
+    <!-- LOGO + SUBTITLE -->
     <div class="title-wrap">
-      <div class="bomb-icon">💣</div>
-      <h1>TIME BOMB</h1>
+      <img src="/boom-tp.png" alt="BOOM" class="title-logo" />
       <div class="subtitle">Buy to survive · Sell to detonate</div>
     </div>
 
@@ -704,7 +681,7 @@
         <div class="timer-corner bl"></div>
         <div class="timer-corner br"></div>
         <div class="timer-label">TIME REMAINING</div>
-        <span id="timer">60</span>
+        <span id="timer">600</span>
         <div class="timer-sub">SECONDS UNTIL DETONATION</div>
       </div>
     </div>
@@ -733,11 +710,11 @@
       </div>
       <div class="stat-card">
         <div class="stat-value" id="stat-added">+0s</div>
-        <div class="stat-label">Time Added</div>
+        <div class="stat-label">Added</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="stat-removed">-0s</div>
-        <div class="stat-label">Time Burned</div>
+        <div class="stat-label">Burned</div>
       </div>
     </div>
 
@@ -756,14 +733,14 @@
         <div class="rule-icon">📈</div>
         <div>
           <div class="rule-title">Buy &gt; 0.1 SOL</div>
-          <div class="rule-desc">Each buy above 0.1 SOL adds <strong>+1 second</strong> to the timer. Keep the bomb alive.</div>
+          <div class="rule-desc">Adds <strong>+1 second</strong> to the timer. Keep the bomb alive.</div>
         </div>
       </div>
       <div class="rule-card sell">
         <div class="rule-icon">📉</div>
         <div>
           <div class="rule-title">Sell &gt; 0.1 SOL</div>
-          <div class="rule-desc">Each sell above 0.1 SOL removes <strong>-1 second</strong> from the timer. Traitors die first.</div>
+          <div class="rule-desc">Removes <strong>-1 second</strong>. Traitors die first.</div>
         </div>
       </div>
     </div>
@@ -778,46 +755,42 @@
     </div>
   </main>
 
-  <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump &nbsp;·&nbsp; Dev wallet sells at 0 &nbsp;·&nbsp; Built on Solana</div>
+  <div class="footer-text">ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump &nbsp;·&nbsp; Built on Solana</div>
 
   <script>
     // ── CONSTANTS ────────────────────────────────────
-    const TOKEN = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
+    const TOKEN      = 'ARqTot7i7vJhs9kfbtobLs8oLQFeBrUJKmczgqk4pump';
     const DEV_WALLET = '6qqr3oi7sZwMJ8ikwFv5cZsz2CEzMUhQ9sn6nUDXcwfm';
-    const WS_URL = 'wss://pumpportal.fun/api/data';
-    const BASE_TIME = 600;
+    const WS_URL     = 'wss://pumpportal.fun/api/data';
+    const BASE_TIME  = 600;
 
-    // ── STATE (authoritative value from server) ──────
-    let detonatesAt = Date.now() + BASE_TIME * 1000;
-    let running = true;
+    // ── STATE ─────────────────────────────────────────
+    let detonatesAt  = Date.now() + BASE_TIME * 1000;
+    let running      = true;
     let consecutiveSells = 0;
-    let serverSynced = false; // don't allow detonate() until first poll succeeds
+    let serverSynced = false;
 
     // ── DOM REFS ─────────────────────────────────────
-    const timerEl = document.getElementById('timer');
-    const progressFill = document.getElementById('progress-fill');
-    const pctLabel = document.getElementById('pct-label');
-    const feedList = document.getElementById('feed-list');
-    const flashEl = document.getElementById('flash');
-    const statBuys = document.getElementById('stat-buys');
-    const statSells = document.getElementById('stat-sells');
-    const statAdded = document.getElementById('stat-added');
-    const statRemoved = document.getElementById('stat-removed');
-    const detonation = document.getElementById('detonation');
-    const headerStatus = document.getElementById('header-status');
-    const devBadge = document.getElementById('dev-status-badge');
+    const timerEl        = document.getElementById('timer');
+    const progressFill   = document.getElementById('progress-fill');
+    const pctLabel       = document.getElementById('pct-label');
+    const feedList       = document.getElementById('feed-list');
+    const flashEl        = document.getElementById('flash');
+    const statBuys       = document.getElementById('stat-buys');
+    const statSells      = document.getElementById('stat-sells');
+    const statAdded      = document.getElementById('stat-added');
+    const statRemoved    = document.getElementById('stat-removed');
+    const detonation     = document.getElementById('detonation');
+    const headerStatus   = document.getElementById('header-status');
+    const devBadge       = document.getElementById('dev-status-badge');
     const devAlertBanner = document.getElementById('dev-alert');
 
     // ── CANVAS BACKGROUND ────────────────────────────
     const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    let W, H;
+    const ctx    = canvas.getContext('2d');
+    let particles = [], W, H;
 
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
     resize();
     window.addEventListener('resize', resize);
 
@@ -836,8 +809,8 @@
       const cl = document.body.className;
       ctx.strokeStyle = cl.includes('green') ? 'rgba(0,255,136,0.04)' : cl.includes('yellow') ? 'rgba(255,204,0,0.03)' : 'rgba(255,45,45,0.04)';
       ctx.lineWidth = 1;
-      for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-      for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
     }
 
     function animateBg() {
@@ -872,14 +845,14 @@
       document.body.classList.remove('state-green', 'state-yellow', 'state-red');
       if (consecutiveSells >= 2) document.body.classList.add('state-red');
       else if (timeLeft > 10) document.body.classList.add('state-green');
-      else if (timeLeft > 5) document.body.classList.add('state-yellow');
-      else document.body.classList.add('state-red');
+      else if (timeLeft > 5)  document.body.classList.add('state-yellow');
+      else                    document.body.classList.add('state-red');
       const cl = document.body.className;
       const col = cl.includes('green') ? '#00ff88' : cl.includes('yellow') ? '#ffcc00' : '#ff2d2d';
       particles.forEach(p => p.color = col);
     }
 
-    // ── GLOBAL TIMER (computed from server detonatesAt) ──
+    // ── GLOBAL TIMER ─────────────────────────────────
     setInterval(() => {
       if (!running) return;
       const timeLeft = Math.max(0, (detonatesAt - Date.now()) / 1000);
@@ -903,14 +876,13 @@
     }
 
     // ── FEED ─────────────────────────────────────────
-    function shortAddr(addr) { return addr ? addr.slice(0, 4) + '…' + addr.slice(-4) : '???'; }
+    function shortAddr(addr) { return addr ? addr.slice(0,4) + '…' + addr.slice(-4) : '???'; }
 
-    function addFeed(type, addr, amount, qualifies) {
+    function addFeed(type, addr, amount) {
       const item = document.createElement('div');
       item.className = 'feed-item ' + type;
       const sign = type === 'buy' ? '+' : '-';
       const icon = type === 'buy' ? '▲' : '▼';
-      const delta = qualifies ? sign + '1s' : 'small';
       item.innerHTML = `
         <div class="feed-left">
           <span class="feed-type">${icon} ${type.toUpperCase()}</span>
@@ -918,26 +890,25 @@
         </div>
         <div class="feed-right">
           <span class="feed-amount">${Number(amount).toFixed(3)} SOL</span>
-          <span class="feed-delta">${delta}</span>
+          <span class="feed-delta">${sign}1s</span>
         </div>`;
       feedList.insertBefore(item, feedList.firstChild);
       if (feedList.children.length > 12) feedList.removeChild(feedList.lastChild);
     }
 
-    // ── VISUAL EFFECTS (called from Ably broadcast) ──
+    // ── VISUAL EFFECTS ───────────────────────────────
     function showBuyEffect(amount, addr) {
-      const qualifies = amount >= 0.1;
       flash('rgba(0,255,136,0.3)');
-      if (qualifies) burst(W / 2, H / 2, '#00ff88');
-      addFeed('buy', addr, amount, qualifies);
+      burst(W / 2, H / 2, '#00ff88');
+      addFeed('buy', addr, amount);
       consecutiveSells = 0;
     }
 
     function showSellEffect(amount, addr) {
-      const qualifies = amount >= 0.1;
-      if (qualifies) { consecutiveSells++; shake(); }
+      consecutiveSells++;
+      shake();
       flash('rgba(255,45,45,0.4)');
-      addFeed('sell', addr, amount, qualifies);
+      addFeed('sell', addr, amount);
     }
 
     // ── SYNC STATE FROM SERVER ───────────────────────
@@ -945,9 +916,9 @@
       if (!state || !state.detonatesAt) return;
       detonatesAt = Number(state.detonatesAt);
       serverSynced = true;
-      statBuys.textContent = state.totalBuys || 0;
-      statSells.textContent = state.totalSells || 0;
-      statAdded.textContent = '+' + (state.totalAdded || 0) + 's';
+      statBuys.textContent    = state.totalBuys    || 0;
+      statSells.textContent   = state.totalSells   || 0;
+      statAdded.textContent   = '+' + (state.totalAdded   || 0) + 's';
       statRemoved.textContent = '-' + (state.totalRemoved || 0) + 's';
     }
 
@@ -968,18 +939,14 @@
       const item = document.createElement('div');
       item.className = 'feed-item dev-sell';
       item.innerHTML = `
-        <div class="feed-left"><span class="feed-type">💀 DEV WALLET SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
-        <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta">BOMB</span></div>`;
+        <div class="feed-left"><span class="feed-type">💀 DEV SELL</span><span class="feed-addr">${shortAddr(DEV_WALLET)}</span></div>
+        <div class="feed-right"><span class="feed-amount">${Number(solAmount).toFixed(3)} SOL</span><span class="feed-delta">BOOM</span></div>`;
       feedList.insertBefore(item, feedList.firstChild);
       for (let i = 0; i < 6; i++) setTimeout(() => { shake(); flash('rgba(255,0,0,0.6)'); }, i * 200);
       setTimeout(detonate, 1200);
     }
 
-    // ── FETCH INITIAL STATE ──────────────────────────
-    function setStatus(text, color) { headerStatus.textContent = text; headerStatus.style.color = color || ''; }
-
     // ── POLL SERVER STATE ────────────────────────────
-    // Fetches authoritative detonatesAt + stats every 2s — keeps all clients in sync
     function pollState() {
       fetch('/api/get-state')
         .then(r => r.json())
@@ -990,15 +957,13 @@
     pollState();
 
     // ── PUMP.FUN WEBSOCKET ───────────────────────────
-    // Each client connects but only REPORTS trades to /api/trade (server dedupes by sig)
-    let ws = null;
-    let reconnectDelay = 2000;
+    let ws = null, reconnectDelay = 2000;
 
     function connectWS() {
       ws = new WebSocket(WS_URL);
       ws.onopen = () => {
         reconnectDelay = 2000;
-        ws.send(JSON.stringify({ method: 'subscribeTokenTrade', keys: [TOKEN] }));
+        ws.send(JSON.stringify({ method: 'subscribeTokenTrade',   keys: [TOKEN] }));
         ws.send(JSON.stringify({ method: 'subscribeAccountTrade', keys: [DEV_WALLET] }));
       };
 
@@ -1007,10 +972,9 @@
         try { data = JSON.parse(event.data); } catch { return; }
         if (!data.txType || !data.signature) return;
 
-        const solAmount = data.solAmount || 0;
+        const solAmount  = data.solAmount || 0;
         const isDevWallet = data.traderPublicKey === DEV_WALLET;
 
-        // Dev wallet sells this token → immediate local detonation (no need to wait for API)
         if (isDevWallet && data.txType === 'sell' && (data.mint === TOKEN || !data.mint)) {
           if (running) triggerDevSell(solAmount);
           return;
@@ -1019,7 +983,6 @@
         if (data.mint && data.mint !== TOKEN) return;
         if (solAmount < 0.1) return;
 
-        // Show visual effects + optimistic timer update immediately
         if (data.txType === 'buy') {
           showBuyEffect(solAmount, data.traderPublicKey);
           detonatesAt += 1000;
@@ -1028,16 +991,10 @@
           detonatesAt = Math.max(detonatesAt - 1000, Date.now() + 500);
         }
 
-        // Report to API — server dedupes and keeps all clients in sync via polling
         fetch('/api/trade', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            signature: data.signature,
-            txType: data.txType,
-            solAmount,
-            traderAddr: data.traderPublicKey,
-          }),
+          body: JSON.stringify({ signature: data.signature, txType: data.txType, solAmount, traderAddr: data.traderPublicKey }),
         }).catch(() => {});
       };
 
