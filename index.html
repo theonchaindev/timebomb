@@ -958,7 +958,7 @@
         if (solAmount < 0.1) return;
 
         if (data.txType === 'buy') {
-          const addSecs = solAmount >= 10 ? 30 : solAmount >= 5 ? 10 : 2;
+          const addSecs = solAmount >= 10 ? 30 : solAmount >= 5 ? 10 : solAmount >= 3 ? 5 : 2;
           showBuyEffect(solAmount, data.traderPublicKey, addSecs);
           detonatesAt += addSecs * 1000;
         } else if (data.txType === 'sell') {

@@ -662,7 +662,7 @@
         if(isDevWallet)return;
         if(data.mint&&data.mint!==TOKEN)return;
         if(solAmount<0.1)return;
-        if(data.txType==='buy'){const addSecs=solAmount>=10?30:solAmount>=5?10:2;showBuyEffect(solAmount,data.traderPublicKey,addSecs);detonatesAt+=addSecs*1000;}
+        if(data.txType==='buy'){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,data.traderPublicKey,addSecs);detonatesAt+=addSecs*1000;}
         else if(data.txType==='sell'){showSellEffect(solAmount,data.traderPublicKey);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
       };
       ws.onclose=()=>{if(running)setTimeout(connectWS,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.5,15000);};

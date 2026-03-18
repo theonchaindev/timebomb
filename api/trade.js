@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
       totalBuys++
       if (qualifies) {
         const sol = Number(solAmount)
-        const addMs = sol >= 10 ? 30000 : sol >= 5 ? 10000 : 2000
+        const addMs = sol >= 10 ? 30000 : sol >= 5 ? 10000 : sol >= 3 ? 5000 : 2000
         detonatesAt += addMs
         totalAdded++
       }
