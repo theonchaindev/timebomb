@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
     processed.push(signature)
     if (processed.length > 200) processed.splice(0, processed.length - 200)
 
-    const newState = { detonatesAt, totalBuys, totalSells, totalAdded, totalRemoved, processed }
+    const newState = { detonatesAt, totalBuys, totalSells, totalAdded, totalRemoved, processed, paused: !!state.paused, detonated: !!state.detonated }
     await writeGist(newState)
 
     res.json({ ok: true, detonatesAt })
