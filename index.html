@@ -798,55 +798,64 @@
 
     function drawChart() {
       chartCtx.clearRect(0, 0, chartW, chartH);
-      const keys = Object.keys(ohlcBuckets).map(Number).sort((a,b)=>a-b);
+      const keys = Object.keys(ohlcBuckets).map(Number).sort((a,b) => a-b);
       if (keys.length < 2) return;
-      const candles = keys.slice(-MAX_CANDLES).map(k => ohlcBuckets[k]);
-      let minP = Infinity, maxP = -Infinity;
-      for (const c of candles) { if (c.l < minP) minP = c.l; if (c.h > maxP) maxP = c.h; }
-      if (maxP === minP) { maxP *= 1.003; minP *= 0.997; }
+      const closes = keys.slice(-MAX_CANDLES).map(k => ohlcBuckets[k].c);
+      let minP = Math.min(...closes), maxP = Math.max(...closes);
+      const rangePad = (maxP - minP) * 0.25 || Math.abs(maxP) * 0.005 || 1e-12;
+      minP -= rangePad; maxP += rangePad;
       const range = maxP - minP;
-      const padL = chartW * 0.03, padR = chartW * 0.07;
+      const padL = chartW * 0.02, padR = chartW * 0.04;
       const padT = chartH * 0.1,  padB = chartH * 0.1;
       const plotW = chartW - padL - padR, plotH = chartH - padT - padB;
-      const gap = plotW / MAX_CANDLES;
-      const candleW = Math.max(2, gap * 0.6);
+      const isUp = closes[closes.length - 1] >= closes[0];
+      const color = isUp ? '#00ff88' : '#ff3333';
       const py = p => padT + plotH * (1 - (p - minP) / range);
-      // right-align: latest candle at right edge
-      const startX = padL + (MAX_CANDLES - candles.length) * gap;
+      const n = closes.length;
+      const gap = plotW / Math.max(MAX_CANDLES - 1, 1);
+      const offX = padL + (MAX_CANDLES - n) * gap;
+      const pts = closes.map((p, i) => [offX + i * gap, py(p)]);
 
-      // grid lines
-      chartCtx.globalAlpha = 0.05;
-      chartCtx.strokeStyle = '#ffffff'; chartCtx.lineWidth = 1;
-      for (let i = 0; i <= 4; i++) {
-        const y = padT + (plotH / 4) * i;
-        chartCtx.beginPath(); chartCtx.moveTo(padL, y); chartCtx.lineTo(chartW - padR, y); chartCtx.stroke();
-      }
+      // area fill
+      const grad = chartCtx.createLinearGradient(0, padT, 0, padT + plotH);
+      grad.addColorStop(0, isUp ? 'rgba(0,255,136,0.1)' : 'rgba(255,51,51,0.1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      chartCtx.globalAlpha = 1;
+      chartCtx.beginPath();
+      chartCtx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) chartCtx.lineTo(pts[i][0], pts[i][1]);
+      chartCtx.lineTo(pts[pts.length-1][0], padT + plotH);
+      chartCtx.lineTo(pts[0][0], padT + plotH);
+      chartCtx.closePath();
+      chartCtx.fillStyle = grad;
+      chartCtx.fill();
 
-      // candles
-      chartCtx.globalAlpha = 0.25;
-      for (let i = 0; i < candles.length; i++) {
-        const c = candles[i];
-        const x = startX + i * gap + gap / 2;
-        const isGreen = c.c >= c.o;
-        const color = isGreen ? '#00ff88' : '#ff3333';
-        const yH = py(c.h), yL = py(c.l), yO = py(c.o), yC = py(c.c);
-        chartCtx.strokeStyle = color; chartCtx.lineWidth = 1;
-        chartCtx.beginPath(); chartCtx.moveTo(x, yH); chartCtx.lineTo(x, yL); chartCtx.stroke();
-        chartCtx.fillStyle = color;
-        const bodyY = Math.min(yO, yC);
-        const bodyH = Math.max(1.5, Math.abs(yC - yO));
-        chartCtx.fillRect(x - candleW / 2, bodyY, candleW, bodyH);
-      }
+      // line
+      chartCtx.globalAlpha = 0.4;
+      chartCtx.strokeStyle = color;
+      chartCtx.lineWidth = 1.5;
+      chartCtx.lineJoin = 'round';
+      chartCtx.beginPath();
+      chartCtx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) chartCtx.lineTo(pts[i][0], pts[i][1]);
+      chartCtx.stroke();
+
+      // current price dot
+      chartCtx.globalAlpha = 0.55;
+      chartCtx.fillStyle = color;
+      chartCtx.beginPath();
+      chartCtx.arc(pts[pts.length-1][0], pts[pts.length-1][1], 2.5, 0, Math.PI*2);
+      chartCtx.fill();
 
       // current price dashed line
-      if (chartLastPrice > 0) {
-        const y = py(chartLastPrice);
-        chartCtx.globalAlpha = 0.2;
-        chartCtx.strokeStyle = '#ffffff'; chartCtx.lineWidth = 1;
-        chartCtx.setLineDash([4, 7]);
-        chartCtx.beginPath(); chartCtx.moveTo(padL, y); chartCtx.lineTo(chartW - padR, y); chartCtx.stroke();
-        chartCtx.setLineDash([]);
-      }
+      chartCtx.globalAlpha = 0.1;
+      chartCtx.strokeStyle = '#ffffff'; chartCtx.lineWidth = 1;
+      chartCtx.setLineDash([3, 6]);
+      chartCtx.beginPath();
+      chartCtx.moveTo(padL, pts[pts.length-1][1]);
+      chartCtx.lineTo(chartW - padR, pts[pts.length-1][1]);
+      chartCtx.stroke();
+      chartCtx.setLineDash([]);
       chartCtx.globalAlpha = 1;
     }
     setInterval(drawChart, 200);
