@@ -661,6 +661,8 @@
       };
       ws.onmessage=(event)=>{
         let data;try{data=JSON.parse(event.data);}catch{return;}
+        // Debug: show every incoming message in status bar
+        setWsStatus('live ● | '+JSON.stringify(data).slice(0,60));
         if(!data.txType||!data.signature)return;
         const solAmount=Number(data.solAmount)||0;
         const isDevWallet=DEV_WALLET&&data.traderPublicKey===DEV_WALLET;
