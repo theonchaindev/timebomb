@@ -982,9 +982,6 @@
       statSells.textContent   = state.totalSells   || 0;
       statAdded.textContent   = '+' + (state.totalAdded   || 0) + 's';
       statRemoved.textContent = '-' + (state.totalRemoved || 0) + 's';
-      // Show/hide standby overlay
-      const standby = document.getElementById('standby-overlay');
-      if (standby) standby.style.display = paused ? 'flex' : 'none';
     }
 
     function detonate() {
