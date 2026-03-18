@@ -683,10 +683,11 @@
     async function pollTrades(){
       if(!TOKEN||!running)return;
       try{
-        const r=await fetch(`https://frontend-api.pump.fun/trades/all?mint=${TOKEN}&limit=20`);
-        if(!r.ok)return;
+        const r=await fetch(`/api/get-trades?mint=${TOKEN}`);
+        if(!r.ok){setWsStatus('poll error: '+r.status);return;}
         const trades=await r.json();
-        if(!Array.isArray(trades))return;
+        if(!Array.isArray(trades)){setWsStatus('poll bad data: '+JSON.stringify(trades).slice(0,60));return;}
+        setWsStatus((ws&&ws.readyState===1?'WS live ● | ':'WS offline | ')+'poll ok, '+trades.length+' trades');
         for(const t of trades){
           if(!t.signature||seenSigs.has(t.signature))continue;
           seenSigs.add(t.signature);
@@ -700,7 +701,7 @@
           if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,trader,addSecs);detonatesAt+=addSecs*1000;}
           else{showSellEffect(solAmount,trader);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
         }
-      }catch(_){}
+      }catch(e){setWsStatus('poll err: '+e.message);}
     }
 
     // ── START ─────────────────────────────────────────
