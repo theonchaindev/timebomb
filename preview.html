@@ -353,11 +353,11 @@
 
     let detonatesAt      = Date.now() + BASE_TIME * 1000;
     let running          = false;
-    let paused           = false;
     let consecutiveSells = 0;
-    let serverSynced     = false;
     let lastTickSecond   = -1;
     let ws               = null;
+    // local stats (not synced to Gist)
+    let localBuys = 0, localSells = 0, localAdded = 0, localRemoved = 0;
 
     const timerEl        = document.getElementById('timer');
     const timerBlock     = document.getElementById('timer-block');
@@ -415,6 +415,8 @@
       }
 
       document.getElementById('gate').style.display = 'none';
+      // Start local timer immediately — fully independent of Gist
+      detonatesAt = Date.now() + BASE_TIME * 1000;
       running = true;
       startAll();
     }
@@ -560,20 +562,20 @@
       particles.forEach(p=>p.color=col);
     }
 
-    // ── TIMER LOOP ────────────────────────────────────
+    // ── TIMER LOOP (fully local, no Gist dependency) ──
     setInterval(()=>{
-      if(!running||paused)return;
+      if(!running)return;
       const timeLeft=Math.max(0,(detonatesAt-Date.now())/1000);
       const second=Math.ceil(timeLeft);
       timerEl.textContent=second;
       const pct=Math.min(100,(timeLeft/BASE_TIME)*100);
       progressFill.style.width=pct+'%';
       updateColorState(timeLeft);
-      if(second!==lastTickSecond&&second>0&&serverSynced){
+      if(second!==lastTickSecond&&second>0){
         lastTickSecond=second;
         playTick(timeLeft<=5?'critical':timeLeft<=20?'urgent':'normal');
       }
-      if(timeLeft<=0&&serverSynced)detonate();
+      if(timeLeft<=0)detonate();
     },100);
 
     // ── FLASH / SHAKE ─────────────────────────────────
@@ -594,19 +596,24 @@
     }
 
     // ── EFFECTS ───────────────────────────────────────
-    function showBuyEffect(amount,addr){flash('rgba(0,255,136,0.3)');burst(W/2,H/2,'#00ff88');addFeed('buy',addr,amount);showDelta('buy');timerEl.classList.remove('bump-up','bump-down');void timerEl.offsetWidth;timerEl.classList.add('bump-up');playBuySound();consecutiveSells=0;}
-    function showSellEffect(amount,addr){consecutiveSells++;shake();flash('rgba(255,26,26,0.45)',0.45);burst(W/2,H/2,'#ff1a1a',14);addFeed('sell',addr,amount);showDelta('sell');timerEl.classList.remove('bump-up','bump-down');void timerEl.offsetWidth;timerEl.classList.add('bump-down');playSellSound();}
-
-    // ── SYNC ──────────────────────────────────────────
-    function syncState(state){
-      if(!state||!state.detonatesAt)return;
-      paused=!!state.paused;
-      detonatesAt=Number(state.detonatesAt);
-      serverSynced=true;
-      statBuys.textContent=state.totalBuys||0;
-      statSells.textContent=state.totalSells||0;
-      statAdded.textContent='+'+(state.totalAdded||0)+'s';
-      statRemoved.textContent='-'+(state.totalRemoved||0)+'s';
+    function updateStats(){
+      statBuys.textContent=localBuys;
+      statSells.textContent=localSells;
+      statAdded.textContent='+'+localAdded+'s';
+      statRemoved.textContent='-'+localRemoved+'s';
+    }
+    function showBuyEffect(amount,addr){
+      localBuys++;localAdded++;updateStats();
+      flash('rgba(0,255,136,0.3)');burst(W/2,H/2,'#00ff88');addFeed('buy',addr,amount);showDelta('buy');
+      timerEl.classList.remove('bump-up','bump-down');void timerEl.offsetWidth;timerEl.classList.add('bump-up');
+      playBuySound();consecutiveSells=0;
+    }
+    function showSellEffect(amount,addr){
+      localSells++;localRemoved++;updateStats();
+      consecutiveSells++;shake();flash('rgba(255,26,26,0.45)',0.45);burst(W/2,H/2,'#ff1a1a',14);
+      addFeed('sell',addr,amount);showDelta('sell');
+      timerEl.classList.remove('bump-up','bump-down');void timerEl.offsetWidth;timerEl.classList.add('bump-down');
+      playSellSound();
     }
 
     function detonate(){
@@ -625,12 +632,6 @@
       feedList.insertBefore(item,feedList.firstChild);
       for(let i=0;i<8;i++)setTimeout(()=>{shake();flash('rgba(255,0,0,0.7)',0.7);},i*150);
       setTimeout(detonate,1200);
-    }
-
-    // ── POLL ──────────────────────────────────────────
-    function pollState(){
-      fetch('/api/get-state').then(r=>r.json()).then(syncState).catch(()=>{})
-        .finally(()=>{if(running)setTimeout(pollState,2000);});
     }
 
     // ── WS ────────────────────────────────────────────
@@ -654,15 +655,12 @@
         if(solAmount<0.1)return;
         if(data.txType==='buy'){showBuyEffect(solAmount,data.traderPublicKey);detonatesAt+=1000;}
         else if(data.txType==='sell'){showSellEffect(solAmount,data.traderPublicKey);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
-        fetch('/api/trade',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({signature:data.signature,txType:data.txType,solAmount,traderAddr:data.traderPublicKey})}).catch(()=>{});
       };
       ws.onclose=()=>{if(running)setTimeout(connectWS,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.5,15000);};
     }
 
     // ── START ─────────────────────────────────────────
     function startAll(){
-      pollState();
       connectWS();
       fetchTokenPrice();
       fetchDevBalance();
