@@ -350,7 +350,10 @@
     const PASSWORD = 'BOOM2026';
     // ─────────────────────────────────────────────────
 
-    const WS_URL   = 'wss://pumpportal.fun/api/data';
+    const PUMPPORTAL_API_KEY = '';  // set at launch — covers PumpSwap after graduation
+    const WS_URL = PUMPPORTAL_API_KEY
+      ? `wss://pumpportal.fun/api/data?api-key=${PUMPPORTAL_API_KEY}`
+      : 'wss://pumpportal.fun/api/data';
     const BASE_TIME = 100;
 
     let TOKEN      = '';

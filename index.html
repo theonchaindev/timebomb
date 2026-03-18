@@ -530,9 +530,12 @@
       setTimeout(() => { bar.classList.remove('copied'); lbl.textContent = 'Copy'; }, 2000);
     }
 
-    const TOKEN      = '';  // set at launch
-    const DEV_WALLET = '';  // set at launch
-    const WS_URL     = 'wss://pumpportal.fun/api/data';
+    const TOKEN              = '';  // set at launch
+    const DEV_WALLET         = '';  // set at launch
+    const PUMPPORTAL_API_KEY = '';  // set at launch — covers PumpSwap after graduation
+    const WS_URL = PUMPPORTAL_API_KEY
+      ? `wss://pumpportal.fun/api/data?api-key=${PUMPPORTAL_API_KEY}`
+      : 'wss://pumpportal.fun/api/data';
     const BASE_TIME  = 100;
 
     let detonatesAt      = Date.now() + BASE_TIME * 1000;
