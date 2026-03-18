@@ -26,7 +26,12 @@ module.exports = async (req, res) => {
 
     if (txType === 'buy') {
       totalBuys++
-      if (qualifies) { detonatesAt += 1000; totalAdded++ }
+      if (qualifies) {
+        const sol = Number(solAmount)
+        const addMs = sol >= 10 ? 30000 : sol >= 5 ? 10000 : 2000
+        detonatesAt += addMs
+        totalAdded++
+      }
     } else if (txType === 'sell') {
       totalSells++
       if (qualifies) { detonatesAt -= 1000; totalRemoved++ }

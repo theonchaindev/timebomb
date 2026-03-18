@@ -173,10 +173,14 @@
     @keyframes critical-pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 
     /* timer bump on trade */
-    #timer.bump-up   { animation: bump-up 0.3s ease forwards !important; }
-    #timer.bump-down { animation: bump-down 0.3s ease forwards !important; }
-    @keyframes bump-up   { 0% { transform:scale(1); } 50% { transform:scale(1.08); } 100% { transform:scale(1); } }
-    @keyframes bump-down { 0% { transform:scale(1); } 50% { transform:scale(0.94); } 100% { transform:scale(1); } }
+    #timer.bump-up    { animation: bump-up    0.3s ease forwards !important; }
+    #timer.bump-mega  { animation: bump-mega  0.45s ease forwards !important; }
+    #timer.bump-ultra { animation: bump-ultra 0.55s ease forwards !important; }
+    #timer.bump-down  { animation: bump-down  0.3s ease forwards !important; }
+    @keyframes bump-up    { 0% { transform:scale(1); } 50% { transform:scale(1.08); } 100% { transform:scale(1); } }
+    @keyframes bump-mega  { 0% { transform:scale(1); } 40% { transform:scale(1.18); } 100% { transform:scale(1); } }
+    @keyframes bump-ultra { 0% { transform:scale(1); } 40% { transform:scale(1.32); } 100% { transform:scale(1); } }
+    @keyframes bump-down  { 0% { transform:scale(1); } 50% { transform:scale(0.94); } 100% { transform:scale(1); } }
 
     .timer-sub {
       font-size: clamp(0.52rem, 1.8vw, 0.62rem); letter-spacing: 0.22em;
@@ -805,10 +809,10 @@
     }
 
     // ── DELTA POPUP ──────────────────────────────────
-    function showDelta(type) {
+    function showDelta(type, secs) {
       const el = document.createElement('div');
       el.className = 'delta-pop ' + (type === 'buy' ? 'up' : 'down');
-      el.textContent = type === 'buy' ? '+1s' : '−1s';
+      el.textContent = type === 'buy' ? '+' + (secs || 2) + 's' : '−1s';
       timerBlock.style.position = 'relative';
       timerBlock.appendChild(el);
       el.addEventListener('animationend', () => el.remove());
@@ -836,14 +840,24 @@
     }
 
     // ── VISUAL EFFECTS ───────────────────────────────
-    function showBuyEffect(amount, addr) {
-      flash('rgba(0,255,136,0.3)');
-      burst(W/2, H/2, '#00ff88');
+    function showBuyEffect(amount, addr, secs) {
+      const tier = secs >= 30 ? 'ultra' : secs >= 10 ? 'mega' : 'normal';
+      if (tier === 'ultra') {
+        flash('rgba(0,255,255,0.55)');
+        burst(W/2, H/2, '#00ffff', 28);
+        burst(W/2, H/2, '#ffffff', 16);
+      } else if (tier === 'mega') {
+        flash('rgba(0,255,136,0.5)');
+        burst(W/2, H/2, '#00ff88', 20);
+      } else {
+        flash('rgba(0,255,136,0.3)');
+        burst(W/2, H/2, '#00ff88');
+      }
       addFeed('buy', addr, amount);
-      showDelta('buy');
-      timerEl.classList.remove('bump-up','bump-down');
-      void timerEl.offsetWidth; // reflow
-      timerEl.classList.add('bump-up');
+      showDelta('buy', secs);
+      timerEl.classList.remove('bump-up','bump-mega','bump-ultra','bump-down');
+      void timerEl.offsetWidth;
+      timerEl.classList.add(tier === 'ultra' ? 'bump-ultra' : tier === 'mega' ? 'bump-mega' : 'bump-up');
       playBuySound();
       consecutiveSells = 0;
     }
@@ -855,7 +869,7 @@
       burst(W/2, H/2, '#ff1a1a', 14);
       addFeed('sell', addr, amount);
       showDelta('sell');
-      timerEl.classList.remove('bump-up','bump-down');
+      timerEl.classList.remove('bump-up','bump-mega','bump-ultra','bump-down');
       void timerEl.offsetWidth;
       timerEl.classList.add('bump-down');
       playSellSound();
@@ -944,8 +958,9 @@
         if (solAmount < 0.1) return;
 
         if (data.txType === 'buy') {
-          showBuyEffect(solAmount, data.traderPublicKey);
-          detonatesAt += 1000;
+          const addSecs = solAmount >= 10 ? 30 : solAmount >= 5 ? 10 : 2;
+          showBuyEffect(solAmount, data.traderPublicKey, addSecs);
+          detonatesAt += addSecs * 1000;
         } else if (data.txType === 'sell') {
           showSellEffect(solAmount, data.traderPublicKey);
           detonatesAt = Math.max(detonatesAt - 1000, Date.now() + 500);
