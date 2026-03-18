@@ -680,11 +680,37 @@
       ws.onclose=()=>{setWsStatus('offline ✕');wsStatusEl.style.color='#ff1a1a';if(running)setTimeout(connectWS,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.5,15000);};
     }
 
+    // ── POLL FALLBACK (catches trades WS misses) ──────
+    let seenSigs = new Set();
+    async function pollTrades(){
+      if(!TOKEN||!running)return;
+      try{
+        const r=await fetch(`https://frontend-api.pump.fun/trades/all?mint=${TOKEN}&limit=20`);
+        if(!r.ok)return;
+        const trades=await r.json();
+        if(!Array.isArray(trades))return;
+        for(const t of trades){
+          if(!t.signature||seenSigs.has(t.signature))continue;
+          seenSigs.add(t.signature);
+          if(seenSigs.size>400){const old=[...seenSigs].slice(0,200);old.forEach(s=>seenSigs.delete(s));}
+          const solAmount=t.sol_amount/1e9;
+          if(solAmount<0.01)continue;
+          const isDevWallet=DEV_WALLET&&t.user===DEV_WALLET;
+          if(isDevWallet&&!t.is_buy){if(running)triggerDevSell(solAmount);continue;}
+          if(isDevWallet)continue;
+          if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,t.user,addSecs);detonatesAt+=addSecs*1000;}
+          else{showSellEffect(solAmount,t.user);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
+        }
+      }catch(_){}
+    }
+
     // ── START ─────────────────────────────────────────
     function startAll(){
       connectWS();
       fetchTokenPrice();
       fetchDevBalance();
+      pollTrades();
+      setInterval(pollTrades,5000);
       setInterval(fetchDevBalance,30000);
       setInterval(fetchTokenPrice,30000);
     }
