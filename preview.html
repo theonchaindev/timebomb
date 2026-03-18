@@ -268,6 +268,7 @@
   <div id="admin-bar">
     <div class="admin-label">Preview</div>
     <div id="admin-ca-display"></div>
+    <div id="ws-status" style="font-size:0.48rem;letter-spacing:0.12em;padding:0.2rem 0.5rem;background:#222;color:#666;">WS: —</div>
     <button class="admin-change-btn" onclick="changeCA()">Change CA</button>
   </div>
 
@@ -645,27 +646,33 @@
 
     // ── WS ────────────────────────────────────────────
     let reconnectDelay=2000;
+    const wsStatusEl=document.getElementById('ws-status');
+    function setWsStatus(s){if(wsStatusEl)wsStatusEl.textContent='WS: '+s;}
+
     function connectWS(){
       ws=new WebSocket(WS_URL);
+      setWsStatus('connecting…');
       ws.onopen=()=>{
         reconnectDelay=2000;
+        setWsStatus('live ●');
+        wsStatusEl.style.color='#00ff88';
         if(TOKEN)    ws.send(JSON.stringify({method:'subscribeTokenTrade',   keys:[TOKEN]}));
         if(DEV_WALLET)ws.send(JSON.stringify({method:'subscribeAccountTrade',keys:[DEV_WALLET]}));
       };
       ws.onmessage=(event)=>{
         let data;try{data=JSON.parse(event.data);}catch{return;}
         if(!data.txType||!data.signature)return;
-        const solAmount=data.solAmount||0;
+        const solAmount=Number(data.solAmount)||0;
         const isDevWallet=DEV_WALLET&&data.traderPublicKey===DEV_WALLET;
         if(isDevWallet&&data.txType==='sell'){if(running)triggerDevSell(solAmount);return;}
         if(data.vSolInBondingCurve&&data.vTokensInBondingCurve){tokenPriceSOL=data.vSolInBondingCurve/(data.vTokensInBondingCurve/1e6);updateDevHolding();}
         if(isDevWallet)return;
         if(data.mint&&data.mint!==TOKEN)return;
-        if(solAmount<0.1)return;
+        if(solAmount<0.01)return;
         if(data.txType==='buy'){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,data.traderPublicKey,addSecs);detonatesAt+=addSecs*1000;}
         else if(data.txType==='sell'){showSellEffect(solAmount,data.traderPublicKey);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
       };
-      ws.onclose=()=>{if(running)setTimeout(connectWS,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.5,15000);};
+      ws.onclose=()=>{setWsStatus('offline ✕');wsStatusEl.style.color='#ff1a1a';if(running)setTimeout(connectWS,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.5,15000);};
     }
 
     // ── START ─────────────────────────────────────────
