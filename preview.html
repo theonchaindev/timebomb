@@ -272,7 +272,7 @@
     <button class="admin-change-btn" onclick="changeCA()">Change CA</button>
   </div>
 
-  <iframe id="chart-bg" src="" style="position:fixed;inset:0;width:100%;height:100%;border:none;opacity:0.12;z-index:0;pointer-events:none;" allowfullscreen></iframe>
+  <canvas id="chart-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:-1;"></canvas>
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
   <div id="audio-hint">🔇 Tap to enable audio</div>
@@ -424,8 +424,6 @@
       }
 
       document.getElementById('gate').style.display = 'none';
-      document.getElementById('chart-bg').src =
-        `https://dexscreener.com/solana/${TOKEN}?embed=1&theme=dark&trades=0&info=0`;
       // Start local timer immediately — fully independent of Gist
       detonatesAt = Date.now() + BASE_TIME * 1000;
       running = true;
@@ -465,7 +463,7 @@
         const d = await r.json();
         if (d.virtual_sol_reserves && d.virtual_token_reserves) {
           tokenPriceSOL = (d.virtual_sol_reserves / 1e9) / (d.virtual_token_reserves / 1e6);
-          updateDevHolding();
+          updateDevHolding(); updateChartPrice(tokenPriceSOL);
         }
       } catch (_) {}
     }
@@ -560,6 +558,66 @@
     function animateBg(){ctx.clearRect(0,0,W,H);if(particles.length<60)spawnParticle();particles=particles.filter(p=>p.alpha>0.01);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=p.color;ctx.globalAlpha=p.alpha;ctx.fill();ctx.globalAlpha=1;});requestAnimationFrame(animateBg);}
     animateBg();
     function burst(x,y,color,count=20){for(let i=0;i<count;i++){const angle=(Math.PI*2*i)/count,speed=Math.random()*5+2,p={x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,size:Math.random()*5+1,alpha:1,color};particles.push(p);const fade=()=>{p.alpha-=0.02;p.vx*=0.93;p.vy*=0.93;if(p.alpha>0.01)requestAnimationFrame(fade);};fade();}}
+
+    // ── CHART (5-second candles) ──────────────────────
+    const chartCanvas = document.getElementById('chart-canvas');
+    const chartCtx = chartCanvas.getContext('2d');
+    let chartW, chartH;
+    function resizeChart() { chartW = chartCanvas.width = window.innerWidth; chartH = chartCanvas.height = window.innerHeight; }
+    resizeChart(); window.addEventListener('resize', resizeChart);
+
+    const CANDLE_SECS = 5;
+    const MAX_CANDLES = 80;
+    let ohlcBuckets = {};
+
+    function updateChartPrice(p) {
+      if (!p || p <= 0) return;
+      const bucketKey = Math.floor(Date.now() / (CANDLE_SECS * 1000)) * (CANDLE_SECS * 1000);
+      if (!ohlcBuckets[bucketKey]) {
+        ohlcBuckets[bucketKey] = { o: p, h: p, l: p, c: p };
+        const keys = Object.keys(ohlcBuckets).map(Number).sort((a,b)=>a-b);
+        if (keys.length > MAX_CANDLES + 5) keys.slice(0, keys.length - MAX_CANDLES).forEach(k => delete ohlcBuckets[k]);
+      } else {
+        const b = ohlcBuckets[bucketKey];
+        if (p > b.h) b.h = p;
+        if (p < b.l) b.l = p;
+        b.c = p;
+      }
+    }
+
+    function drawChart() {
+      chartCtx.clearRect(0, 0, chartW, chartH);
+      const keys = Object.keys(ohlcBuckets).map(Number).sort((a,b)=>a-b);
+      if (keys.length < 2) return;
+      const candles = keys.slice(-MAX_CANDLES).map(k => ohlcBuckets[k]);
+      let minP = Infinity, maxP = -Infinity;
+      for (const c of candles) { if (c.l < minP) minP = c.l; if (c.h > maxP) maxP = c.h; }
+      if (maxP === minP) { maxP *= 1.001; minP *= 0.999; }
+      const range = maxP - minP;
+      const padX = chartW * 0.04, padY = chartH * 0.1;
+      const plotW = chartW - padX * 2, plotH = chartH - padY * 2;
+      const gap = plotW / MAX_CANDLES;
+      const candleW = Math.max(2, gap * 0.65);
+      chartCtx.globalAlpha = 0.2;
+      for (let i = 0; i < candles.length; i++) {
+        const c = candles[i];
+        const x = padX + i * gap + gap / 2;
+        const isGreen = c.c >= c.o;
+        const color = isGreen ? '#00ff88' : '#ff4444';
+        const yH = padY + plotH * (1 - (c.h - minP) / range);
+        const yL = padY + plotH * (1 - (c.l - minP) / range);
+        const yO = padY + plotH * (1 - (c.o - minP) / range);
+        const yC = padY + plotH * (1 - (c.c - minP) / range);
+        chartCtx.strokeStyle = color; chartCtx.lineWidth = 1;
+        chartCtx.beginPath(); chartCtx.moveTo(x, yH); chartCtx.lineTo(x, yL); chartCtx.stroke();
+        chartCtx.fillStyle = color;
+        const bodyY = Math.min(yO, yC);
+        const bodyH = Math.max(1, Math.abs(yC - yO));
+        chartCtx.fillRect(x - candleW / 2, bodyY, candleW, bodyH);
+      }
+      chartCtx.globalAlpha = 1;
+    }
+    setInterval(drawChart, 200);
 
     // ── COLOR STATE ───────────────────────────────────
     function updateColorState(timeLeft){
@@ -675,7 +733,7 @@
         const solAmount=Number(data.solAmount)||0;
         const isDevWallet=DEV_WALLET&&data.traderPublicKey===DEV_WALLET;
         if(isDevWallet&&data.txType==='sell'){if(running)triggerDevSell(solAmount);return;}
-        if(data.vSolInBondingCurve&&data.vTokensInBondingCurve){tokenPriceSOL=data.vSolInBondingCurve/(data.vTokensInBondingCurve/1e6);updateDevHolding();}
+        if(data.vSolInBondingCurve&&data.vTokensInBondingCurve){tokenPriceSOL=data.vSolInBondingCurve/(data.vTokensInBondingCurve/1e6);updateDevHolding();updateChartPrice(tokenPriceSOL);}
         if(isDevWallet)return;
         if(data.mint&&data.mint!==TOKEN)return;
         if(solAmount<0.01)return;

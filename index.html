@@ -405,7 +405,7 @@
 </head>
 <body class="state-red">
 
-  <iframe id="chart-bg" src="" style="position:fixed;inset:0;width:100%;height:100%;border:none;opacity:0.12;z-index:0;pointer-events:none;" allowfullscreen></iframe>
+  <canvas id="chart-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:-1;"></canvas>
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
   <div id="audio-hint">🔇 Tap to enable audio</div>
@@ -579,7 +579,7 @@
         if (data.virtual_sol_reserves && data.virtual_token_reserves) {
           // virtual_sol_reserves is in lamports, virtual_token_reserves is raw (6 decimals)
           tokenPriceSOL = (data.virtual_sol_reserves / 1e9) / (data.virtual_token_reserves / 1e6);
-          updateDevHolding();
+          updateDevHolding(); updateChartPrice(tokenPriceSOL);
         }
       } catch (_) {}
     }
@@ -768,6 +768,66 @@
       }
     }
 
+    // ── CHART (5-second candles) ──────────────────────
+    const chartCanvas = document.getElementById('chart-canvas');
+    const chartCtx = chartCanvas.getContext('2d');
+    let chartW, chartH;
+    function resizeChart() { chartW = chartCanvas.width = window.innerWidth; chartH = chartCanvas.height = window.innerHeight; }
+    resizeChart(); window.addEventListener('resize', resizeChart);
+
+    const CANDLE_SECS = 5;
+    const MAX_CANDLES = 80;
+    let ohlcBuckets = {};
+
+    function updateChartPrice(p) {
+      if (!p || p <= 0) return;
+      const bucketKey = Math.floor(Date.now() / (CANDLE_SECS * 1000)) * (CANDLE_SECS * 1000);
+      if (!ohlcBuckets[bucketKey]) {
+        ohlcBuckets[bucketKey] = { o: p, h: p, l: p, c: p };
+        const keys = Object.keys(ohlcBuckets).map(Number).sort((a,b)=>a-b);
+        if (keys.length > MAX_CANDLES + 5) keys.slice(0, keys.length - MAX_CANDLES).forEach(k => delete ohlcBuckets[k]);
+      } else {
+        const b = ohlcBuckets[bucketKey];
+        if (p > b.h) b.h = p;
+        if (p < b.l) b.l = p;
+        b.c = p;
+      }
+    }
+
+    function drawChart() {
+      chartCtx.clearRect(0, 0, chartW, chartH);
+      const keys = Object.keys(ohlcBuckets).map(Number).sort((a,b)=>a-b);
+      if (keys.length < 2) return;
+      const candles = keys.slice(-MAX_CANDLES).map(k => ohlcBuckets[k]);
+      let minP = Infinity, maxP = -Infinity;
+      for (const c of candles) { if (c.l < minP) minP = c.l; if (c.h > maxP) maxP = c.h; }
+      if (maxP === minP) { maxP *= 1.001; minP *= 0.999; }
+      const range = maxP - minP;
+      const padX = chartW * 0.04, padY = chartH * 0.1;
+      const plotW = chartW - padX * 2, plotH = chartH - padY * 2;
+      const gap = plotW / MAX_CANDLES;
+      const candleW = Math.max(2, gap * 0.65);
+      chartCtx.globalAlpha = 0.2;
+      for (let i = 0; i < candles.length; i++) {
+        const c = candles[i];
+        const x = padX + i * gap + gap / 2;
+        const isGreen = c.c >= c.o;
+        const color = isGreen ? '#00ff88' : '#ff4444';
+        const yH = padY + plotH * (1 - (c.h - minP) / range);
+        const yL = padY + plotH * (1 - (c.l - minP) / range);
+        const yO = padY + plotH * (1 - (c.o - minP) / range);
+        const yC = padY + plotH * (1 - (c.c - minP) / range);
+        chartCtx.strokeStyle = color; chartCtx.lineWidth = 1;
+        chartCtx.beginPath(); chartCtx.moveTo(x, yH); chartCtx.lineTo(x, yL); chartCtx.stroke();
+        chartCtx.fillStyle = color;
+        const bodyY = Math.min(yO, yC);
+        const bodyH = Math.max(1, Math.abs(yC - yO));
+        chartCtx.fillRect(x - candleW / 2, bodyY, candleW, bodyH);
+      }
+      chartCtx.globalAlpha = 1;
+    }
+    setInterval(drawChart, 200);
+
     // ── COLOR STATE ──────────────────────────────────
     function updateColorState(timeLeft) {
       document.body.classList.remove('state-green','state-yellow','state-red');
@@ -955,7 +1015,7 @@
         // Update price from bonding curve data on every event
         if (data.vSolInBondingCurve && data.vTokensInBondingCurve) {
           tokenPriceSOL = data.vSolInBondingCurve / (data.vTokensInBondingCurve / 1e6);
-          updateDevHolding();
+          updateDevHolding(); updateChartPrice(tokenPriceSOL);
         }
 
         if (isDevWallet) return;
@@ -985,8 +1045,6 @@
     }
 
     connectWS();
-    if (TOKEN) document.getElementById('chart-bg').src =
-      `https://dexscreener.com/solana/${TOKEN}?embed=1&theme=dark&trades=0&info=0`;
   </script>
 </body>
 </html>
