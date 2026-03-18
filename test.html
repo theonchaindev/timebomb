@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOOM — Test Panel</title>
+  <link rel="icon" type="image/png" href="/boom-tp.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 2rem 1.5rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1rem; letter-spacing: 0.2em; color: #ff1a1a; margin-bottom: 2rem; }
+    .section { margin-bottom: 2rem; }
+    .section-title {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid #1a1a1a;
+      padding-bottom: 0.4rem;
+    }
+    button {
+      background: #ff1a1a;
+      color: #fff;
+      border: none;
+      padding: 0.65rem 1.5rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    button:hover { background: #cc0000; }
+    button.green { background: #00aa55; }
+    button.green:hover { background: #008844; }
+    button.grey { background: #333; }
+    button.grey:hover { background: #444; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    pre {
+      background: #111;
+      border: 1px solid #222;
+      padding: 1rem;
+      font-size: 0.7rem;
+      color: #00ff88;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 3rem;
+      margin-top: 0.75rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    pre.error { color: #ff1a1a; }
+    .status-row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .status-item { font-size: 0.65rem; }
+    .status-item span { color: rgba(255,255,255,0.35); }
+    .status-item strong { color: #fff; }
+  </style>
+</head>
+<body>
+
+  <h1>BOOM — TEST PANEL</h1>
+
+  <!-- STATE -->
+  <div class="section">
+    <div class="section-title">Current State</div>
+    <div class="status-row" id="state-display">Loading…</div>
+    <button class="grey" onclick="loadState()">Refresh State</button>
+    <pre id="state-raw"></pre>
+  </div>
+
+  <!-- DETONATE TEST -->
+  <div class="section">
+    <div class="section-title">Test Auto-Sell (Detonate)</div>
+    <p style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-bottom:0.75rem;">
+      Calls /api/detonate — will attempt to sell tokens from dev wallet via PumpPortal.<br>
+      Will mark Gist as <strong style="color:#ff1a1a">detonated:true</strong> — use Reset after testing.
+    </p>
+    <button id="btn-detonate" onclick="testDetonate()">FIRE DETONATE</button>
+    <pre id="detonate-result"></pre>
+  </div>
+
+  <!-- RESET -->
+  <div class="section">
+    <div class="section-title">Reset Gist State</div>
+    <p style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-bottom:0.75rem;">
+      Resets timer and clears detonated flag. Enter seconds for new timer.
+    </p>
+    <input id="reset-secs" type="number" value="600" min="10" max="86400"
+      style="background:#111;border:1px solid #333;color:#fff;padding:0.5rem 0.75rem;font-family:'Courier New',monospace;font-size:0.75rem;width:100px;margin-right:0.5rem;" />
+    <button class="green" onclick="resetState(false)">RESET + RESUME</button>
+    <button class="grey" onclick="resetState(true)">RESET + STANDBY</button>
+    <pre id="reset-result"></pre>
+  </div>
+
+  <!-- TRADE INJECT -->
+  <div class="section">
+    <div class="section-title">Inject Test Trade</div>
+    <p style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-bottom:0.75rem;">
+      Simulate a buy or sell hitting /api/trade.
+    </p>
+    <select id="trade-type" style="background:#111;border:1px solid #333;color:#fff;padding:0.5rem;font-family:'Courier New',monospace;font-size:0.75rem;margin-right:0.5rem;">
+      <option value="buy">BUY</option>
+      <option value="sell">SELL</option>
+    </select>
+    <input id="trade-sol" type="number" value="0.5" step="0.1" min="0.01"
+      style="background:#111;border:1px solid #333;color:#fff;padding:0.5rem 0.75rem;font-family:'Courier New',monospace;font-size:0.75rem;width:80px;margin-right:0.5rem;" />
+    <span style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-right:0.5rem;">SOL</span>
+    <button onclick="injectTrade()">INJECT</button>
+    <pre id="trade-result"></pre>
+  </div>
+
+  <script>
+    async function loadState() {
+      try {
+        const r = await fetch('/api/get-state');
+        const d = await r.json();
+        document.getElementById('state-raw').textContent = JSON.stringify(d, null, 2);
+        const timeLeft = d.detonatesAt ? Math.max(0, Math.ceil((d.detonatesAt - Date.now()) / 1000)) : '?';
+        document.getElementById('state-display').innerHTML = `
+          <div class="status-item"><span>paused: </span><strong>${d.paused ?? false}</strong></div>
+          <div class="status-item"><span>detonated: </span><strong style="color:${d.detonated ? '#ff1a1a' : '#00ff88'}">${d.detonated ?? false}</strong></div>
+          <div class="status-item"><span>time left: </span><strong>${timeLeft}s</strong></div>
+          <div class="status-item"><span>buys/sells: </span><strong>${d.totalBuys ?? 0}/${d.totalSells ?? 0}</strong></div>
+        `;
+      } catch (e) {
+        document.getElementById('state-raw').textContent = 'Error: ' + e.message;
+        document.getElementById('state-raw').className = 'error';
+      }
+    }
+
+    async function testDetonate() {
+      const btn = document.getElementById('btn-detonate');
+      const pre = document.getElementById('detonate-result');
+      btn.disabled = true;
+      btn.textContent = 'FIRING…';
+      pre.className = '';
+      pre.textContent = 'Calling /api/detonate…';
+      try {
+        const r = await fetch('/api/detonate', { method: 'POST' });
+        const d = await r.json();
+        pre.textContent = JSON.stringify(d, null, 2);
+        if (!r.ok || d.error) pre.className = 'error';
+        loadState();
+      } catch (e) {
+        pre.textContent = 'Error: ' + e.message;
+        pre.className = 'error';
+      }
+      btn.disabled = false;
+      btn.textContent = 'FIRE DETONATE';
+    }
+
+    async function resetState(paused) {
+      const secs = Number(document.getElementById('reset-secs').value) || 600;
+      const pre  = document.getElementById('reset-result');
+      pre.className = '';
+      pre.textContent = 'Resetting…';
+      try {
+        const r = await fetch('/api/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seconds: secs, paused })
+        });
+        const d = await r.json();
+        pre.textContent = JSON.stringify(d, null, 2);
+        if (!r.ok || d.error) pre.className = 'error';
+        loadState();
+      } catch (e) {
+        pre.textContent = 'Error: ' + e.message;
+        pre.className = 'error';
+      }
+    }
+
+    async function injectTrade() {
+      const pre    = document.getElementById('trade-result');
+      const txType = document.getElementById('trade-type').value;
+      const sol    = document.getElementById('trade-sol').value;
+      pre.className = '';
+      pre.textContent = 'Injecting…';
+      // Random fake signature
+      const sig = 'TEST_' + Math.random().toString(36).slice(2, 20).toUpperCase();
+      try {
+        const r = await fetch('/api/trade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ signature: sig, txType, solAmount: sol })
+        });
+        const d = await r.json();
+        pre.textContent = JSON.stringify(d, null, 2);
+        if (!r.ok || d.error) pre.className = 'error';
+        loadState();
+      } catch (e) {
+        pre.textContent = 'Error: ' + e.message;
+        pre.className = 'error';
+      }
+    }
+
+    loadState();
+    setInterval(loadState, 5000);
+  </script>
+</body>
+</html>
