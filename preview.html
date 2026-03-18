@@ -658,8 +658,6 @@
         wsStatusEl.style.color='#00ff88';
         if(TOKEN)    ws.send(JSON.stringify({method:'subscribeTokenTrade',   keys:[TOKEN]}));
         if(DEV_WALLET)ws.send(JSON.stringify({method:'subscribeAccountTrade',keys:[DEV_WALLET]}));
-        // Also subscribe to new tokens globally so we can verify the WS is receiving anything
-        ws.send(JSON.stringify({method:'subscribeNewToken'}));
       };
       ws.onmessage=async(event)=>{
         // Handle both text and Blob responses
@@ -695,11 +693,12 @@
           if(seenSigs.size>400){const old=[...seenSigs].slice(0,200);old.forEach(s=>seenSigs.delete(s));}
           const solAmount=t.sol_amount/1e9;
           if(solAmount<0.01)continue;
-          const isDevWallet=DEV_WALLET&&t.user===DEV_WALLET;
+          const trader=t.user||t.traderPublicKey||t.wallet||'';
+          const isDevWallet=DEV_WALLET&&trader===DEV_WALLET;
           if(isDevWallet&&!t.is_buy){if(running)triggerDevSell(solAmount);continue;}
           if(isDevWallet)continue;
-          if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,t.user,addSecs);detonatesAt+=addSecs*1000;}
-          else{showSellEffect(solAmount,t.user);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
+          if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,trader,addSecs);detonatesAt+=addSecs*1000;}
+          else{showSellEffect(solAmount,trader);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
         }
       }catch(_){}
     }
@@ -710,7 +709,7 @@
       fetchTokenPrice();
       fetchDevBalance();
       pollTrades();
-      setInterval(pollTrades,5000);
+      setInterval(pollTrades,2000);
       setInterval(fetchDevBalance,30000);
       setInterval(fetchTokenPrice,30000);
     }
