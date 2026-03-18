@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>BOOM — Dev Tracker</title>
+  <link rel="icon" type="image/png" href="/boom-tp.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 2px solid #222;
+    }
+    .header-logo {
+      display: flex; align-items: center; gap: 0.75rem;
+      text-decoration: none;
+    }
+    .header-logo img { width: 60px; height: auto; }
+    .header-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+    }
+    .header-timer {
+      text-align: right;
+    }
+    .header-timer-label {
+      font-size: 0.5rem;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+    .header-timer-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #ff1a1a;
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+    .header-timer-value.safe { color: #00ff88; }
+    .header-timer-value.warn { color: #ffcc00; }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    /* ── HOLDING CARD ── */
+    .holding-card {
+      background: #111;
+      border: 2px solid #222;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .holding-label {
+      font-size: 0.52rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 0.6rem;
+    }
+    .holding-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 480px) {
+      .holding-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .holding-stat {}
+    .holding-stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1rem, 3.5vw, 1.4rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .holding-stat-value.green { color: #00ff88; }
+    .holding-stat-label {
+      font-size: 0.5rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+    .wallet-row {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #1e1e1e;
+      font-size: 0.55rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.05em;
+      word-break: break-all;
+    }
+    .wallet-row a:hover { color: rgba(255,255,255,0.5); }
+
+    /* ── LOG ── */
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .log-title {
+      font-size: 0.55rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .log-count {
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.2);
+    }
+
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .log-table th {
+      font-size: 0.47rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      text-align: left;
+      padding: 0.4rem 0.75rem;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .log-table td {
+      font-size: 0.6rem;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid #161616;
+      vertical-align: middle;
+    }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: #111; }
+
+    .td-time { color: rgba(255,255,255,0.3); white-space: nowrap; }
+    .td-sol { font-weight: 700; color: #00ff88; }
+    .td-tokens { color: rgba(255,255,255,0.6); }
+    .td-sig a {
+      color: rgba(255,255,255,0.2);
+      font-size: 0.5rem;
+      letter-spacing: 0.03em;
+    }
+    .td-sig a:hover { color: rgba(255,255,255,0.5); }
+
+    .log-empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: rgba(255,255,255,0.2);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── STANDBY ── */
+    #standby {
+      display: flex;
+      position: fixed; inset: 0; z-index: 900;
+      background: #0a0a0a;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+    }
+    #standby img { width: min(160px, 45vw); height: auto; }
+    #standby .sb-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(1rem, 4vw, 1.6rem);
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      color: #ff1a1a;
+    }
+    #standby .sb-sub {
+      font-size: clamp(0.55rem, 2vw, 0.75rem);
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.15em;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="standby">
+    <img src="/boom-tp.png" alt="BOOM" />
+    <div class="sb-title">STANDBY</div>
+    <div class="sb-sub">TRACKER COMING AT LAUNCH</div>
+  </div>
+
+  <div class="header">
+    <a href="/" class="header-logo">
+      <img src="/boom-tp.png" alt="BOOM" />
+      <div class="header-title">Dev Tracker</div>
+    </a>
+    <div class="header-timer">
+      <div class="header-timer-label">Time Remaining</div>
+      <div class="header-timer-value" id="hdr-timer">—</div>
+    </div>
+  </div>
+
+  <main>
+    <!-- HOLDING -->
+    <div class="holding-card">
+      <div class="holding-label">Dev Wallet Holdings</div>
+      <div class="holding-grid">
+        <div class="holding-stat">
+          <div class="holding-stat-value green" id="stat-sol">—</div>
+          <div class="holding-stat-label">SOL Value</div>
+        </div>
+        <div class="holding-stat">
+          <div class="holding-stat-value" id="stat-tokens">—</div>
+          <div class="holding-stat-label">Tokens Held</div>
+        </div>
+        <div class="holding-stat">
+          <div class="holding-stat-value" id="stat-buys">—</div>
+          <div class="holding-stat-label">Total Buys</div>
+        </div>
+      </div>
+      <div class="wallet-row" id="wallet-row"></div>
+    </div>
+
+    <!-- BUY LOG -->
+    <div class="log-header">
+      <div class="log-title">Dev Buy Log</div>
+      <div class="log-count" id="log-count"></div>
+    </div>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>SOL Spent</th>
+          <th>Tokens Received</th>
+          <th>Tx</th>
+        </tr>
+      </thead>
+      <tbody id="log-body">
+        <tr><td colspan="4" class="log-empty">Loading…</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    const TOKEN      = '';  // set at launch
+    const DEV_WALLET = '';  // set at launch
+
+    const standby  = document.getElementById('standby');
+    const hdrTimer = document.getElementById('hdr-timer');
+    const statSol    = document.getElementById('stat-sol');
+    const statTokens = document.getElementById('stat-tokens');
+    const statBuys   = document.getElementById('stat-buys');
+    const walletRow  = document.getElementById('wallet-row');
+    const logBody    = document.getElementById('log-body');
+    const logCount   = document.getElementById('log-count');
+
+    let detonatesAt = null;
+    let tokenPriceSOL = 0;
+    let tokenBalance  = 0;
+
+    // ── TIMER ──────────────────────────────────────────
+    function pollState() {
+      fetch('/api/get-state')
+        .then(r => r.json())
+        .then(state => {
+          if (!state || !state.detonatesAt) return;
+          if (state.paused || state.detonated) {
+            standby.style.display = 'flex';
+            return;
+          }
+          standby.style.display = 'none';
+          detonatesAt = Number(state.detonatesAt);
+        })
+        .catch(() => {})
+        .finally(() => setTimeout(pollState, 2000));
+    }
+
+    setInterval(() => {
+      if (!detonatesAt) return;
+      const s = Math.max(0, Math.ceil((detonatesAt - Date.now()) / 1000));
+      hdrTimer.textContent = s + 's';
+      hdrTimer.className = 'header-timer-value' + (s > 30 ? ' safe' : s > 10 ? ' warn' : '');
+    }, 500);
+
+    // ── WALLET + BALANCE ───────────────────────────────
+    function initWallet() {
+      if (!DEV_WALLET) return;
+      walletRow.innerHTML = `<a href="https://solscan.io/account/${DEV_WALLET}" target="_blank">${DEV_WALLET}</a>`;
+    }
+
+    async function fetchPrice() {
+      if (!TOKEN) return;
+      try {
+        const r = await fetch(`https://frontend-api.pump.fun/coins/${TOKEN}`);
+        const d = await r.json();
+        if (d.virtual_sol_reserves && d.virtual_token_reserves) {
+          tokenPriceSOL = (d.virtual_sol_reserves / 1e9) / (d.virtual_token_reserves / 1e6);
+          updateHolding();
+        }
+      } catch (_) {}
+    }
+
+    async function fetchBalance() {
+      if (!TOKEN || !DEV_WALLET) return;
+      try {
+        const r = await fetch('https://api.mainnet-beta.solana.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', id: 1,
+            method: 'getTokenAccountsByOwner',
+            params: [DEV_WALLET, { mint: TOKEN }, { encoding: 'jsonParsed' }]
+          })
+        });
+        const d = await r.json();
+        const accounts = d.result?.value || [];
+        tokenBalance = accounts.length > 0
+          ? (Number(accounts[0].account.data.parsed.info.tokenAmount.uiAmount) || 0)
+          : 0;
+        updateHolding();
+      } catch (_) {}
+    }
+
+    function updateHolding() {
+      statTokens.textContent = tokenBalance > 0
+        ? tokenBalance.toLocaleString(undefined, { maximumFractionDigits: 0 })
+        : '0';
+      if (tokenBalance > 0 && tokenPriceSOL > 0) {
+        statSol.textContent = '~' + (tokenBalance * tokenPriceSOL).toFixed(3) + ' SOL';
+      } else {
+        statSol.textContent = '0 SOL';
+      }
+    }
+
+    // ── BUY LOG ────────────────────────────────────────
+    async function fetchBuyLog() {
+      if (!TOKEN || !DEV_WALLET) {
+        logBody.innerHTML = '<tr><td colspan="4" class="log-empty">Awaiting launch</td></tr>';
+        return;
+      }
+      try {
+        const r = await fetch(
+          `https://frontend-api.pump.fun/trades/all?mint=${TOKEN}&trader=${DEV_WALLET}&limit=100`
+        );
+        const trades = await r.json();
+        const buys = Array.isArray(trades) ? trades.filter(t => t.is_buy) : [];
+
+        statBuys.textContent = buys.length;
+        logCount.textContent = buys.length + ' buy' + (buys.length !== 1 ? 's' : '');
+
+        if (buys.length === 0) {
+          logBody.innerHTML = '<tr><td colspan="4" class="log-empty">No dev buys yet</td></tr>';
+          return;
+        }
+
+        logBody.innerHTML = buys.map(t => {
+          const sol    = (t.sol_amount / 1e9).toFixed(4);
+          const tokens = Number(t.token_amount / 1e6).toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const time   = t.timestamp ? new Date(t.timestamp * 1000).toLocaleTimeString() : '—';
+          const sig    = t.signature || '';
+          const sigShort = sig ? sig.slice(0, 8) + '…' + sig.slice(-4) : '—';
+          return `<tr>
+            <td class="td-time">${time}</td>
+            <td class="td-sol">${sol} SOL</td>
+            <td class="td-tokens">${tokens}</td>
+            <td class="td-sig"><a href="https://solscan.io/tx/${sig}" target="_blank">${sigShort}</a></td>
+          </tr>`;
+        }).join('');
+      } catch (_) {
+        logBody.innerHTML = '<tr><td colspan="4" class="log-empty">Failed to load</td></tr>';
+      }
+    }
+
+    // ── INIT ───────────────────────────────────────────
+    initWallet();
+    pollState();
+    fetchPrice();
+    fetchBalance();
+    fetchBuyLog();
+    setInterval(fetchBalance, 30000);
+    setInterval(fetchPrice,   30000);
+    setInterval(fetchBuyLog,  15000);
+  </script>
+</body>
+</html>
