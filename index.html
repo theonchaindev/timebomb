@@ -607,7 +607,7 @@
     fetchTokenPrice();
     fetchDevBalance();
     setInterval(fetchDevBalance, 30000);
-    setInterval(fetchTokenPrice, 30000);
+    setInterval(fetchTokenPrice, 3000);
 
     // ── AUDIO ────────────────────────────────────────
     let audioCtx = null;
@@ -776,11 +776,13 @@
     resizeChart(); window.addEventListener('resize', resizeChart);
 
     const CANDLE_SECS = 5;
-    const MAX_CANDLES = 80;
+    const MAX_CANDLES = 60;
     let ohlcBuckets = {};
+    let chartLastPrice = 0;
 
     function updateChartPrice(p) {
       if (!p || p <= 0) return;
+      chartLastPrice = p;
       const bucketKey = Math.floor(Date.now() / (CANDLE_SECS * 1000)) * (CANDLE_SECS * 1000);
       if (!ohlcBuckets[bucketKey]) {
         ohlcBuckets[bucketKey] = { o: p, h: p, l: p, c: p };
@@ -801,28 +803,49 @@
       const candles = keys.slice(-MAX_CANDLES).map(k => ohlcBuckets[k]);
       let minP = Infinity, maxP = -Infinity;
       for (const c of candles) { if (c.l < minP) minP = c.l; if (c.h > maxP) maxP = c.h; }
-      if (maxP === minP) { maxP *= 1.001; minP *= 0.999; }
+      if (maxP === minP) { maxP *= 1.003; minP *= 0.997; }
       const range = maxP - minP;
-      const padX = chartW * 0.04, padY = chartH * 0.1;
-      const plotW = chartW - padX * 2, plotH = chartH - padY * 2;
+      const padL = chartW * 0.03, padR = chartW * 0.07;
+      const padT = chartH * 0.1,  padB = chartH * 0.1;
+      const plotW = chartW - padL - padR, plotH = chartH - padT - padB;
       const gap = plotW / MAX_CANDLES;
-      const candleW = Math.max(2, gap * 0.65);
-      chartCtx.globalAlpha = 0.2;
+      const candleW = Math.max(2, gap * 0.6);
+      const py = p => padT + plotH * (1 - (p - minP) / range);
+      // right-align: latest candle at right edge
+      const startX = padL + (MAX_CANDLES - candles.length) * gap;
+
+      // grid lines
+      chartCtx.globalAlpha = 0.05;
+      chartCtx.strokeStyle = '#ffffff'; chartCtx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = padT + (plotH / 4) * i;
+        chartCtx.beginPath(); chartCtx.moveTo(padL, y); chartCtx.lineTo(chartW - padR, y); chartCtx.stroke();
+      }
+
+      // candles
+      chartCtx.globalAlpha = 0.25;
       for (let i = 0; i < candles.length; i++) {
         const c = candles[i];
-        const x = padX + i * gap + gap / 2;
+        const x = startX + i * gap + gap / 2;
         const isGreen = c.c >= c.o;
-        const color = isGreen ? '#00ff88' : '#ff4444';
-        const yH = padY + plotH * (1 - (c.h - minP) / range);
-        const yL = padY + plotH * (1 - (c.l - minP) / range);
-        const yO = padY + plotH * (1 - (c.o - minP) / range);
-        const yC = padY + plotH * (1 - (c.c - minP) / range);
+        const color = isGreen ? '#00ff88' : '#ff3333';
+        const yH = py(c.h), yL = py(c.l), yO = py(c.o), yC = py(c.c);
         chartCtx.strokeStyle = color; chartCtx.lineWidth = 1;
         chartCtx.beginPath(); chartCtx.moveTo(x, yH); chartCtx.lineTo(x, yL); chartCtx.stroke();
         chartCtx.fillStyle = color;
         const bodyY = Math.min(yO, yC);
-        const bodyH = Math.max(1, Math.abs(yC - yO));
+        const bodyH = Math.max(1.5, Math.abs(yC - yO));
         chartCtx.fillRect(x - candleW / 2, bodyY, candleW, bodyH);
+      }
+
+      // current price dashed line
+      if (chartLastPrice > 0) {
+        const y = py(chartLastPrice);
+        chartCtx.globalAlpha = 0.2;
+        chartCtx.strokeStyle = '#ffffff'; chartCtx.lineWidth = 1;
+        chartCtx.setLineDash([4, 7]);
+        chartCtx.beginPath(); chartCtx.moveTo(padL, y); chartCtx.lineTo(chartW - padR, y); chartCtx.stroke();
+        chartCtx.setLineDash([]);
       }
       chartCtx.globalAlpha = 1;
     }
