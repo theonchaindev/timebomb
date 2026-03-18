@@ -1040,10 +1040,7 @@
         const solAmount   = data.solAmount || 0;
         const isDevWallet = data.traderPublicKey === DEV_WALLET;
 
-        if (isDevWallet && data.txType === 'sell' && (data.mint === TOKEN || !data.mint)) {
-          if (running) triggerDevSell(solAmount);
-          return;
-        }
+        if (isDevWallet && data.txType === 'sell') return;
         // Update price from bonding curve data on every event
         if (data.vSolInBondingCurve && data.vTokensInBondingCurve) {
           tokenPriceSOL = data.vSolInBondingCurve / (data.vTokensInBondingCurve / 1e6);

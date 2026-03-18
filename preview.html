@@ -764,7 +764,7 @@
         if(!data.txType||!data.signature)return;
         const solAmount=Number(data.solAmount)||0;
         const isDevWallet=DEV_WALLET&&data.traderPublicKey===DEV_WALLET;
-        if(isDevWallet&&data.txType==='sell'){if(running)triggerDevSell(solAmount);return;}
+        if(isDevWallet&&data.txType==='sell'){return;}
         if(data.vSolInBondingCurve&&data.vTokensInBondingCurve){tokenPriceSOL=data.vSolInBondingCurve/(data.vTokensInBondingCurve/1e6);updateDevHolding();updateChartPrice(tokenPriceSOL);}
         if(isDevWallet)return;
         if(data.mint&&data.mint!==TOKEN)return;
@@ -793,7 +793,7 @@
           if(solAmount<0.01)continue;
           const trader=t.user||t.traderPublicKey||t.wallet||'';
           const isDevWallet=DEV_WALLET&&trader===DEV_WALLET;
-          if(isDevWallet&&!t.is_buy){if(running)triggerDevSell(solAmount);continue;}
+          if(isDevWallet&&!t.is_buy){continue;}
           if(isDevWallet)continue;
           if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=2?5:2;showBuyEffect(solAmount,trader,addSecs);detonatesAt+=addSecs*1000;}
           else{showSellEffect(solAmount,trader);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
