@@ -448,7 +448,7 @@
     </div>
 
     <!-- CA: hidden until launch -->
-    <div class="ca-bar" id="ca-bar" onclick="copyCA()" style="display:none">
+    <div class="ca-bar" id="ca-bar" onclick="copyCA()">
       <div>
         <div class="ca-label">Contract Address</div>
         <div class="ca-addr" id="ca-addr"></div>
@@ -518,7 +518,7 @@
 
   <script>
     function copyCA() {
-      const ca = 'A53GtbwuTvzL4N75rJHo5AqeiBAWKcArk5PnUyZVpump';
+      const ca = TOKEN;
       navigator.clipboard.writeText(ca).catch(() => {
         const ta = document.createElement('textarea');
         ta.value = ca; document.body.appendChild(ta); ta.select();
@@ -532,6 +532,7 @@
     }
 
     const TOKEN              = '7nWPU88H2xPiJPAA2kCCKazACf8WcaL3W7E7d29Xpump';
+    document.getElementById('ca-addr').textContent = TOKEN;
     const DEV_WALLET         = '';  // set at launch
     const PUMPPORTAL_API_KEY = '61rqgpa65dv5mukd6d46cp3dacvp2pj4c5ukckjnen37jj9gcdmqemknencpwpjr8975evk15xrnjaufedvp6h3ncdammwah6n54jm3c61554hvgd0rn8m9m69b5jpbq8xanjavbewykub5374uvkdn43ehhh6dv2ykv48ga5d5axk7en8kjnva610nakbjcn2mgcbhe50kuf8';  // covers PumpSwap after graduation
     const WS_URL = PUMPPORTAL_API_KEY
