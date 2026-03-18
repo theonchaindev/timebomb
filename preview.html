@@ -272,6 +272,7 @@
     <button class="admin-change-btn" onclick="changeCA()">Change CA</button>
   </div>
 
+  <iframe id="chart-bg" src="" style="position:fixed;inset:0;width:100%;height:100%;border:none;opacity:0.12;z-index:0;pointer-events:none;" allowfullscreen></iframe>
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
   <div id="audio-hint">🔇 Tap to enable audio</div>
@@ -423,6 +424,8 @@
       }
 
       document.getElementById('gate').style.display = 'none';
+      document.getElementById('chart-bg').src =
+        `https://dexscreener.com/solana/${TOKEN}?embed=1&theme=dark&trades=0&info=0`;
       // Start local timer immediately — fully independent of Gist
       detonatesAt = Date.now() + BASE_TIME * 1000;
       running = true;
@@ -595,10 +598,11 @@
 
     // ── FEED ──────────────────────────────────────────
     function shortAddr(addr){return addr?addr.slice(0,4)+'…'+addr.slice(-4):'???';}
-    function addFeed(type,addr,amount){
+    function addFeed(type,addr,amount,secs){
       const item=document.createElement('div');item.className='feed-item '+type;
-      const sign=type==='buy'?'+':'−',icon=type==='buy'?'▲':'▼';
-      item.innerHTML=`<div class="feed-left"><span class="feed-type">${icon} ${type.toUpperCase()}</span><span class="feed-addr">${shortAddr(addr)}</span></div><div class="feed-right"><span class="feed-amount">${Number(amount).toFixed(3)} SOL</span><span class="feed-delta">${sign}1s</span></div>`;
+      const icon=type==='buy'?'▲':'▼';
+      const deltaStr=type==='buy'?'+'+(secs||2)+'s':'−1s';
+      item.innerHTML=`<div class="feed-left"><span class="feed-type">${icon} ${type.toUpperCase()}</span><span class="feed-addr">${shortAddr(addr)}</span></div><div class="feed-right"><span class="feed-amount">${Number(amount).toFixed(3)} SOL</span><span class="feed-delta">${deltaStr}</span></div>`;
       feedList.insertBefore(item,feedList.firstChild);
       if(feedList.children.length>12)feedList.removeChild(feedList.lastChild);
     }
@@ -616,7 +620,7 @@
       if(tier==='ultra'){flash('rgba(0,255,255,0.55)');burst(W/2,H/2,'#00ffff',28);burst(W/2,H/2,'#ffffff',16);}
       else if(tier==='mega'){flash('rgba(0,255,136,0.5)');burst(W/2,H/2,'#00ff88',20);}
       else{flash('rgba(0,255,136,0.3)');burst(W/2,H/2,'#00ff88');}
-      addFeed('buy',addr,amount);showDelta('buy',secs);
+      addFeed('buy',addr,amount,secs);showDelta('buy',secs);
       timerEl.classList.remove('bump-up','bump-mega','bump-ultra','bump-down');void timerEl.offsetWidth;
       timerEl.classList.add(tier==='ultra'?'bump-ultra':tier==='mega'?'bump-mega':'bump-up');
       playBuySound();consecutiveSells=0;
@@ -675,7 +679,7 @@
         if(isDevWallet)return;
         if(data.mint&&data.mint!==TOKEN)return;
         if(solAmount<0.01)return;
-        if(data.txType==='buy'){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,data.traderPublicKey,addSecs);detonatesAt+=addSecs*1000;}
+        if(data.txType==='buy'){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=2?5:2;showBuyEffect(solAmount,data.traderPublicKey,addSecs);detonatesAt+=addSecs*1000;}
         else if(data.txType==='sell'){showSellEffect(solAmount,data.traderPublicKey);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
       };
       ws.onclose=()=>{setWsStatus('offline ✕');wsStatusEl.style.color='#ff1a1a';if(running)setTimeout(connectWS,reconnectDelay);reconnectDelay=Math.min(reconnectDelay*1.5,15000);};
@@ -701,7 +705,7 @@
           const isDevWallet=DEV_WALLET&&trader===DEV_WALLET;
           if(isDevWallet&&!t.is_buy){if(running)triggerDevSell(solAmount);continue;}
           if(isDevWallet)continue;
-          if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=3?5:2;showBuyEffect(solAmount,trader,addSecs);detonatesAt+=addSecs*1000;}
+          if(t.is_buy){const addSecs=solAmount>=10?30:solAmount>=5?10:solAmount>=2?5:2;showBuyEffect(solAmount,trader,addSecs);detonatesAt+=addSecs*1000;}
           else{showSellEffect(solAmount,trader);detonatesAt=Math.max(detonatesAt-1000,Date.now()+500);}
         }
       }catch(e){setWsStatus('poll err: '+e.message);}

@@ -405,6 +405,7 @@
 </head>
 <body class="state-red">
 
+  <iframe id="chart-bg" src="" style="position:fixed;inset:0;width:100%;height:100%;border:none;opacity:0.12;z-index:0;pointer-events:none;" allowfullscreen></iframe>
   <canvas id="bg-canvas"></canvas>
   <div id="flash"></div>
   <div id="audio-hint">🔇 Tap to enable audio</div>
@@ -824,11 +825,12 @@
     // ── FEED ─────────────────────────────────────────
     function shortAddr(addr) { return addr ? addr.slice(0,4)+'…'+addr.slice(-4) : '???'; }
 
-    function addFeed(type, addr, amount) {
+    function addFeed(type, addr, amount, secs) {
       const item = document.createElement('div');
       item.className = 'feed-item ' + type;
       const sign = type === 'buy' ? '+' : '−';
       const icon = type === 'buy' ? '▲' : '▼';
+      const deltaStr = type === 'buy' ? '+' + (secs || 2) + 's' : '−1s';
       item.innerHTML = `
         <div class="feed-left">
           <span class="feed-type">${icon} ${type.toUpperCase()}</span>
@@ -836,7 +838,7 @@
         </div>
         <div class="feed-right">
           <span class="feed-amount">${Number(amount).toFixed(3)} SOL</span>
-          <span class="feed-delta">${sign}1s</span>
+          <span class="feed-delta">${deltaStr}</span>
         </div>`;
       feedList.insertBefore(item, feedList.firstChild);
       if (feedList.children.length > 12) feedList.removeChild(feedList.lastChild);
@@ -856,7 +858,7 @@
         flash('rgba(0,255,136,0.3)');
         burst(W/2, H/2, '#00ff88');
       }
-      addFeed('buy', addr, amount);
+      addFeed('buy', addr, amount, secs);
       showDelta('buy', secs);
       timerEl.classList.remove('bump-up','bump-mega','bump-ultra','bump-down');
       void timerEl.offsetWidth;
@@ -961,7 +963,7 @@
         if (solAmount < 0.1) return;
 
         if (data.txType === 'buy') {
-          const addSecs = solAmount >= 10 ? 30 : solAmount >= 5 ? 10 : solAmount >= 3 ? 5 : 2;
+          const addSecs = solAmount >= 10 ? 30 : solAmount >= 5 ? 10 : solAmount >= 2 ? 5 : 2;
           showBuyEffect(solAmount, data.traderPublicKey, addSecs);
           detonatesAt += addSecs * 1000;
         } else if (data.txType === 'sell') {
@@ -983,6 +985,8 @@
     }
 
     connectWS();
+    if (TOKEN) document.getElementById('chart-bg').src =
+      `https://dexscreener.com/solana/${TOKEN}?embed=1&theme=dark&trades=0&info=0`;
   </script>
 </body>
 </html>
