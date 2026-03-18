@@ -658,11 +658,14 @@
         wsStatusEl.style.color='#00ff88';
         if(TOKEN)    ws.send(JSON.stringify({method:'subscribeTokenTrade',   keys:[TOKEN]}));
         if(DEV_WALLET)ws.send(JSON.stringify({method:'subscribeAccountTrade',keys:[DEV_WALLET]}));
+        // Also subscribe to new tokens globally so we can verify the WS is receiving anything
+        ws.send(JSON.stringify({method:'subscribeNewToken'}));
       };
-      ws.onmessage=(event)=>{
-        let data;try{data=JSON.parse(event.data);}catch{return;}
-        // Debug: show every incoming message in status bar
-        setWsStatus('live ● | '+JSON.stringify(data).slice(0,60));
+      ws.onmessage=async(event)=>{
+        // Handle both text and Blob responses
+        const raw=typeof event.data==='string'?event.data:await event.data.text();
+        setWsStatus('live ● | '+raw.slice(0,80));
+        let data;try{data=JSON.parse(raw);}catch{return;}
         if(!data.txType||!data.signature)return;
         const solAmount=Number(data.solAmount)||0;
         const isDevWallet=DEV_WALLET&&data.traderPublicKey===DEV_WALLET;
